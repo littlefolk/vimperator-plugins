@@ -56,11 +56,14 @@ liberator.plugins.browser_object_api = (function () {
   /* BarTab API */
     // @http://github.com/philikon/BarTab/blob/master/modules/prototypes.js#L237
     // @http://github.com/philikon/BarTab/blob/master/modules/prototypes.js#L246
+    istap: function (aTab)
+      (aTab.getAttribute("ontap") == "true"),
+
     loaded: function (aTabs) 
-      (aTabs || browser_object_api.all()).filter(function (aTab) aTab.getAttribute("ontap") != "true"),
+      (aTabs || browser_object_api.all()).filter(function (aTab) !browser_object_api.istap(aTab)),
 
     unload: function (aTabs) 
-      (aTabs || browser_object_api.all()).filter(function (aTab) aTab.getAttribute("ontap") == "true"),
+      (aTabs || browser_object_api.all()).filter(function (aTab) browser_object_api.istap(aTab)),
 
 
   /* BrowserObject API Support */
