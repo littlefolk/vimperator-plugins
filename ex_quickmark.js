@@ -1,7 +1,7 @@
 // ex_quickmark {{{
 liberator.plugins.exqmarks = (function () {
   if (liberator.plugins.browser_object_api) {
-    let qmarks = { // {{{
+    let $ = { // {{{
       init: function () {
         this._qmarks = storage.newMap("quickmarks", {store: true});
         return this;
@@ -18,7 +18,7 @@ liberator.plugins.exqmarks = (function () {
       },
       util: { // {{{
         check: function (qmark) (/^[a-zA-Z0-9]$/.test(qmark)),
-        msg: function (str) liberator.echo("QuickMark: " + str),
+        echo: function (str) liberator.echo("QuickMark: " + str),
         urlseparator: RegExp("\\s*" + options["urlseparator"] + "\\s*"),
         toArray: function (arg) {
           if (typeof(arg) == "string")
@@ -44,40 +44,40 @@ liberator.plugins.exqmarks = (function () {
     }.init(); // }}}
     let api = { // {{{
       qmark: {
-        type: commands.OPTION_ANY,
-        validator: qmarks.util.check,
+        type: commands.OPTION_STRING,
+        validator: $.util.check,
       },
 
       append: {
         type: commands.OPTION_STRING,
         cmd: function (qmark, arg)
           (qmark && arg) && this.func(qmark, arg),
-        func: function (qmark, location, silent) {
-          qmarks.set(qmark, qmarks.get(qmark).concat(
+        func: function (qmark, location) {
+          $.set(qmark, $.get(qmark).concat(
             (browser_object_api[location])?
               browser_object_api[location]().map(function (aTab) aTab.linkedBrowser.lastURI.spec):
-              qmarks.util.toArray(qmarks.util.toString((Commands.argTypes[commands.OPTION_LIST]).parse(toString(location))))
+              $.util.toArray($.util.toString(Commands.argTypes[commands.OPTION_LIST].parse(toString(location))))
           ));
-          qmarks.util.msg("Append '" + qmark + "' @ " + location);
+          $.util.echo("Append '" + qmark + "' @ " + location);
         },
-        completer: browser_object_api.options.
-                     filter(function (arr) (arr[1] == commands.OPTION_NOARG)).
-                     map(function (arr) arr[0][0].slice(1)).
-                     map(function (str) [str, "BrowserObject " + str]),
+        completer: browser_object_api.options
+                     .filter(function (arr) (arr[1] == commands.OPTION_NOARG))
+                     .map(function (arr) arr[0][0].slice(1))
+                     .map(function (str) [str, "BrowserObject " + str]),
       },
 
       pop: {
         type: commands.OPTION_INT,
-        cmd: function (qmark, arg)
-          util.copyToClipboard(qmarks.util.toString(this.func(qmark, arg || 1))),
+        cmd: function (qmark, count)
+          util.copyToClipboard($.util.toString(this.func(qmark, count || 1))),
         func: function (qmark, count) {
-          let marks = qmarks.get(qmark);
+          let marks = $.get(qmark);
           let res = [];
           for (let i = 0, l = count; i < l; i++)
             res.push(marks.pop());
           res = res.reverse();
-          qmarks.set(qmark, marks);
-          qmarks.util.msg("Pop '" + qmark + "' @ " + res);
+          $.set(qmark, marks);
+          $.util.echo("Pop '" + qmark + "' @ " + res);
           return res;
         },
       },
@@ -85,29 +85,29 @@ liberator.plugins.exqmarks = (function () {
       push: {
         type: commands.OPTION_LIST,
         cmd: function (qmark, arg) 
-          (qmark && arg) && this.func(qmark, qmarks.util.toString(arg)),
+          (qmark && arg) && this.func(qmark, $.util.toString(arg)),
         func: function (qmark, location) {
-          let marks = qmarks.get(qmark);
-          let arr = qmarks.util.toArray(location);
+          let marks = $.get(qmark);
+          let arr = $.util.toArray(location);
           for (let i = 0, l = arr.length; i < l; i++)
             marks.push(arr[i]);
-          qmarks.set(qmark, marks);
-          qmarks.util.msg("Push '" + qmark + "' @ " + location);
+          $.set(qmark, marks);
+          $.util.echo("Push '" + qmark + "' @ " + location);
         },
       },
 
       shift: {
         type: commands.OPTION_INT,
-        cmd: function (qmark, arg)
-          util.copyToClipboard(qmarks.util.toString(this.func(qmark, arg || 1))),
+        cmd: function (qmark, count)
+          util.copyToClipboard($.util.toString(this.func(qmark, count || 1))),
         func: function (qmark, count) {
-          let marks = qmarks.get(qmark);
+          let marks = $.get(qmark);
           let res = [];
           for (let i = 0, l = count; i < l; i++)
             res.push(marks.shift());
           res = res.reverse();
-          qmarks.set(qmark, marks);
-          qmarks.util.msg("Shift '" + qmark + "' @ " + res);
+          $.set(qmark, marks);
+          $.util.echo("Shift '" + qmark + "' @ " + res);
           return res;
         },
       },
@@ -115,68 +115,63 @@ liberator.plugins.exqmarks = (function () {
       unshift: {
         type: commands.OPTION_LIST,
         cmd: function (qmark, arg)
-          (qmark && arg) && this.func(qmark, qmarks.util.toString(arg)),
+          (qmark && arg) && this.func(qmark, $.util.toString(arg)),
         func: function (qmark, location) {
-          let marks = qmarks.get(qmark);
-          let arr = qmarks.util.toArray(location).reverse();
+          let marks = $.get(qmark);
+          let arr = $.util.toArray(location).reverse();
           for (let i = 0, l = arr.length; i < l; i++)
             marks.unshift(a[i]);
-          qmarks.set(qmark, marks);
-          qmarks.util.msg("Unshift '" + qmark + "' @ " + location);
+          $.set(qmark, marks);
+          $.util.echo("Unshift '" + qmark + "' @ " + location);
         },
       },
 
       uniq: {
-        type: commands.OPTION_NOARG,
-        cmd: function (qmark, arg)
+        cmd: function (qmark)
           this.func(qmark),
         func: function (qmark) {
-          let marks = qmarks.get(qmark);
-          let res = util.Array.uniq(qmarks.get(qmark), true)
-          qmarks.set(qmark, res);
-          qmarks.util.msg("Uniq '" + qmark + "' @ " + marks.length + "->" + res.length);
+          let marks = $.get(qmark);
+          let res = util.Array.uniq($.get(qmark), true)
+          $.set(qmark, res);
+          $.util.echo("Uniq '" + qmark + "' @ " + marks.length + "->" + res.length);
         },
       },
 
       sort: {
-        type: commands.OPTION_NOARG,
-        cmd: function (qmark, arg)
+        cmd: function (qmark)
           this.func(qmark),
-        func: function (qmark, reverse) {
-          qmarks.set(qmark, qmarks.get(qmark).sort());
-          if (reverse)
-            api.reverse(qmark);
-          qmarks.util.msg("Sort '" + qmark + "'");
+        func: function (qmark) {
+          $.set(qmark, $.get(qmark).sort());
+          $.util.echo("Sort '" + qmark + "'");
         },
       },
 
       reverse: {
-        type: commands.OPTION_NOARG,
-        cmd: function (qmark, arg)
+        cmd: function (qmark)
           this.func(qmark),
         func: function (qmark) {
-          qmarks.set(qmark, qmarks.get(qmark).reverse());
-          qmarks.util.msg("Reverse '" + qmark + "'");
+          $.set(qmark, $.get(qmark).reverse());
+          $.util.echo("Reverse '" + qmark + "'");
         },
       },
 
       copy: {
-        type: commands.OPTION_NOARG,
-        cmd: function (qmark, arg) {
-          let items = qmarks.get(qmark);
-          util.copyToClipboard(qmarks.util.toString(util.stringToURLArray(qmarks.util.toString(items))));
-          qmarks.util.msg("Copy '" + qmark + "' @ " + items);
+        cmd: function (qmark)
+          this.func(qmark),
+        func: function (qmark) {
+          let items = $.get(qmark);
+          util.copyToClipboard($.util.toString(util.stringToURLArray($.util.toString(items))));
+          $.util.echo("Copy '" + qmark + "' @ " + items);
         },
       },
 
       remove: {
-        type: commands.OPTION_NOARG,
-        cmd: function (qmark, arg)
+        cmd: function (qmark)
           this.func(qmark),
         func: function (qmark) {
-          qmarks.set("_", qmarks.get(qmark));
+          $.set("_", $.get(qmark));
           quickmarks.remove(qmark);
-          qmarks.util.msg("Remove '" + qmark + "'");
+          $.util.echo("Remove '" + qmark + "'");
         },
       },
 
@@ -186,27 +181,26 @@ liberator.plugins.exqmarks = (function () {
           (qmark && arg) && this.func(qmark, arg),
         func: function (from, to) {
           if (REGISTRY_IS_APPEND)
-            api.append(to, qmarks.get(from), false);
+            api.append(to, $.get(from), false);
           else
-            qmarks.set(to, qmarks.get(from));
-          qmarks.util.msg("Rename '" + from + "' to '" + to + "'");
+            $.set(to, $.get(from));
+          $.util.echo("Rename '" + from + "' to '" + to + "'");
           api.remove(from);
         },
-        validator: qmarks.util.check,
+        validator: $.util.check,
       },
 
       echo: {
-        type: commands.OPTION_NOARG,
-        cmd: function (qmark, arg)
+        cmd: function (qmark)
           this.func(qmark),
         func: function (qmark) {
-          let items = qmarks.get(qmark);
+          let items = $.get(qmark);
           if (items.length)
             liberator.echo("QuickMark: Echo '" + qmark + "' @ " + items.length + "items" + 
-                           <ol>{items.map(function (h) <li>{template.highlightURL(h)}</li>).reduce(function(a,b) a+b)}</ol>,
+                           <ol>{items.map(function (item) <li>{template.highlightURL(item)}</li>).reduce(function(a,b) a+b)}</ol>,
                            commandline.FORCE_MULTILINE);
           else
-            qmarks.util.msg("Echo '" + qmark + "' @ 0items");
+            $.util.echo("Echo '" + qmark + "' @ 0items");
         },
       },
 
@@ -217,14 +211,13 @@ liberator.plugins.exqmarks = (function () {
         function (args)
         {
           let qmark = args["-qmark"] || args[0];
-          liberator.assert(qmark, "E471: Argument required (" + qmark + ")");
-          let parse = args.string.match(/-(?!qmark)\w+(\s|$)/gi)
+          liberator.assert(qmark && $.util.check(qmark),
+                           "E471: QuickMark's Name Argument required (-qmark is " + qmark + ")");
+          let parse = args.string.match(/-(?!qmark)\w+(\s|$)/gi);
           if (parse)
             parse.map(function (s) s.trim().slice(1))
               .filter(function (command) api[command])
-              .forEach(function (command){
-                api[command].cmd(qmark, args["-" + command]);
-              });
+              .forEach(function (command) api[command].cmd(qmark, args["-" + command]));
           else
               api.echo.func(qmark);
         },
@@ -233,7 +226,7 @@ liberator.plugins.exqmarks = (function () {
           completer: function (context)
           {
             context.title = ["QuickMark", "URLs"];
-            context.completions = qmarks._qmarks;
+            context.completions = $._qmarks;
           },
           options: [[key, api[key]] for (key in api)].map(function ([key, action])
             [
