@@ -11,7 +11,7 @@
       };
       tabs.select(
         (
-          candidate[parseInt((flag && (ts.getParentTab(gBrowser.mCurrentTab) && "0")) || (count || tap()))] || 
+          candidate[parseInt((flag && ts.getParentTab(gBrowser.mCurrentTab) && ((count && count - 1) || "0")) || (count || tap()))] || 
           all[carryover(all, candidate, count)]
         )._tPos
       );
