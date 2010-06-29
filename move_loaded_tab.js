@@ -1,14 +1,20 @@
 // 次の未読タブへ移動 {{{
 (function(){
   if (liberator.plugins.browser_object_api) {
+    let OPTION = {
+      // Countがタブの先端・終端を越える数だけ与えられた場合に、反対側に飛んで続けるか、端で止まるか。
+      loop: true,
+    };
     let bo = liberator.plugins.browser_object_api;
     let ts = TreeStyleTabService;
     let tap = function () (bo.istap(gBrowser.mCurrentTab)? 0: 1);
     let select = function (candidate, all, count, flag) {
-      let carryover = function (all, remnant, count) {
-        let i = ((count && (count % all.length) - remnant.length) || 0);
-        return (((i < 0) && i + all.length) || i);
-      };
+      let carryover = (OPTION.loop)?
+        function (all, remnant, count) {
+          let i = ((count && (count % all.length) - remnant.length) || 0);
+          return (((i < 0) && i + all.length) || i);
+        }:
+        function (all, remnant) (remnant.length == 1)? 0: all.length - 1;
       tabs.select(
         (
           candidate[parseInt((flag && ts.getParentTab(gBrowser.mCurrentTab) && ((count && count - 1) || "0")) || (count || tap()))] || 
