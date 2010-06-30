@@ -29,14 +29,18 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
       illust : false,
     },
 
-    // @Completion Tags
-    //   "both"          : Bookmark && Illust
-    //   "illust"        : Illust - Bookmark
-    //   "illust-full"   : Illust
-    //   "bookmark"      : Bookmark - Illust
-    //   "bookmark-full" : Bookmark
-    //   "sep"           : Separator Space
-    COMPLETION: ["both", "illust", "bookmark"],
+    COMPLETION: {
+      // CompletionTags Show
+      //   "both"          : Bookmark && Illust
+      //   "illust"        : Illust - Bookmark
+      //   "illust-full"   : Illust
+      //   "bookmark"      : Bookmark - Illust
+      //   "bookmark-full" : Bookmark
+      //   "sep"           : Separator Space
+      tag: ["both", "illust", "bookmark"],
+      // Descending Order of Bookmark Count
+      sort: true,
+    },
 
     PAGE_MESSAGE: {
       success    : "\u8ffd\u52a0\u3057\u307e\u3057\u305f",                         // # 追加しました
@@ -251,7 +255,11 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
       _dict["illust"] = _dict["illust-full"].filter(function ([t, d]) !_c[t]);
       _dict["bookmark"] = _dict["bookmark-full"].filter(function ([t, d]) !_c[t]);
     };
-    return util.Array.flatten((self.COMPLETION || ["illust-full", "bookmark-full"]).map(function (key) _dict[key] || []));
+    let sortFunc = (self.COMPLETION.sort)?
+      let (_calc = function ([t, d]) (d == self.ECHO_MESSAGE["reqtag"])? t: d.match(/\d+/g).map(parseFloat).reduce(function (a, b) a + b))
+        function (arr) arr.sort(function (a, b) CompletionContext.Sort.number(_calc(a), _calc(b))):
+      util.identity;
+    return util.Array.flatten((self.COMPLETION.tag || ["illust-full", "bookmark-full"]).map(function (key) sortFunc(_dict[key] || [])));
   };
 
   let _postBookmark = function (type, tag, limit)
