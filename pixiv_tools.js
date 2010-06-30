@@ -385,13 +385,13 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
     ].forEach(function ([_name, _url])
       add("Cd" + _name, function (args) liberator.open(_url(), args.bang? liberator.NEW_TAB: liberator.CURRENT_TAB), {bang: true})
     );
-    add("FavA[uto]"           , function () self.FUNC.postBookmark());
-    add("FavI[llust]"         , function () self.FUNC.postBookmark(false));
-    add("FavU[ser]"           , function () self.FUNC.postBookmark(true));
-    add("ToggleI[llust]"      , self.FUNC.toggleIllust);
-    add("ToggleC[omment]"     , function () window.content.wrappedJSObject.one_comment_view());
-    add("Post[Tombloo]"       , self.FUNC.postTombloo);
-    add("Cmd[ComptagsUpdate]" , function () _getBookmarkTags(true));
+    add("FavA[uto]"      , function () self.FUNC.postBookmark());
+    add("FavI[llust]"    , function () self.FUNC.postBookmark(false));
+    add("FavU[ser]"      , function () self.FUNC.postBookmark(true));
+    add("ToggleI[llust]" , self.FUNC.toggleIllust);
+    add("ToggleC[omment]", function () window.content.wrappedJSObject.one_comment_view());
+    add("Post[Tombloo]"  , self.FUNC.postTombloo);
+    add("U[pdate]"       , function () _getBookmarkTags(true) && _getTT());
   };
   addCommands();
 
