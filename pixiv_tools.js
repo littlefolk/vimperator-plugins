@@ -29,6 +29,15 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
       illust : false,
     },
 
+    // @Completion Tags
+    //   "both"          : Bookmark && Illust
+    //   "illust"        : Illust - Bookmark
+    //   "illust-full"   : Illust
+    //   "bookmark"      : Bookmark - Illust
+    //   "bookmark-full" : Bookmark
+    //   "sep"           : Separator Space
+    COMPLETION: ["both", "illust", "bookmark"],
+
     PAGE_MESSAGE: {
       success    : "\u8ffd\u52a0\u3057\u307e\u3057\u305f",                         // # 追加しました
       bookmark   : "\u3042\u306a\u305f\u306e\u30d6\u30c3\u30af\u30de\u30fc\u30af", // # あなたのブックマーク
@@ -193,7 +202,7 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
     return BigImageElem;
   };
 
-  let _getCompTags = function (_getFlag)
+  let _getBookmarkTags = function (_getFlag)
   {
     let data = self.STORE.get("data", null);
     let now = new Date().getTime();
@@ -207,23 +216,42 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
         let tagList = res.getHTMLDocument("id('bookmark_list')/ul/li[@class!='level0']/a")
         if (tagList)
         {
-          self.STORE.set("data", tagList.map(function (e) [$LX("./text()", e).textContent, $LX("./span/text()", e).textContent]));
+          let obj = {};
+          tagList.forEach(function (e) obj[$LX("./text()", e).textContent] = $LX("./span/text()", e).textContent)
+          self.STORE.set("data", obj);
           self.STORE.set("EXPIRE", now);
           self.STORE.save();
-          Logger.log("_getCompTags.Success(" + tagList.length + ")");
+          Logger.log("_getBookmarkTags.Success(" + tagList.length + ")");
         }
         else
         {
           self.STORE.remove();
-          Logger.echoerr("_getCompTags.Error(" + res.req.body + ")");
+          Logger.echoerr("_getBookmarkTags.Error(" + res.req.body + ")");
         };
       });
-      req.addEventListener("onFailure",   function (res) Logger.echoerr("_getCompTags.Failure"  ));
-      req.addEventListener("onException", function (res) Logger.echoerr("_getCompTags.Exception"));
+      req.addEventListener("onFailure",   function (res) Logger.echoerr("_getBookmarkTags.Failure"  ));
+      req.addEventListener("onException", function (res) Logger.echoerr("_getBookmarkTags.Exception"));
       req.get();
     }
     else
-      return data || [];
+      return data || {};
+  };
+
+  let _getCompTags = function ()
+  {
+    let _dict = {};
+    let _store = util.cloneObject(_getBookmarkTags());
+    let _imgtags = self.GET.ImgTags;
+    _dict["sep"] = [["", ""]];
+    _dict["both"] = _imgtags.filter(function (t) _store[t]).map(function (t) [t, _store[t] + " + " + self.ECHO_MESSAGE["reqtag"]]);
+    _dict["illust-full"] = _imgtags.map(function (s) [s, self.ECHO_MESSAGE["reqtag"]]);
+    _dict["bookmark-full"] = [[k, _store[k]] for (k in _store)];
+    let (_c = util.Array.toObject(_dict["both"]))
+    {
+      _dict["illust"] = _dict["illust-full"].filter(function ([t, d]) !_c[t]);
+      _dict["bookmark"] = _dict["bookmark-full"].filter(function ([t, d]) !_c[t]);
+    };
+    return util.Array.flatten((self.COMPLETION || ["illust-full", "bookmark-full"]).map(function (key) _dict[key] || []));
   };
 
   let _postBookmark = function (type, tag, limit)
@@ -355,7 +383,7 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
     add("ToggleI[llust]"      , self.FUNC.toggleIllust);
     add("ToggleC[omment]"     , function () window.content.wrappedJSObject.one_comment_view());
     add("Post[Tombloo]"       , self.FUNC.postTombloo);
-    add("Cmd[ComptagsUpdate]" , function () _getCompTags(true));
+    add("Cmd[ComptagsUpdate]" , function () _getBookmarkTags(true));
   };
   addCommands();
 
