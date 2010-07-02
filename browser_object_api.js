@@ -18,7 +18,7 @@ liberator.plugins.browser_object_api = (function () {
     left: function (aTabs) {
       let ary = aTabs || collection();
       let res = [ary[i] for (i in ary) if(ary[i]._tPos <= active())];
-      return res;
+      return res.reverse();
     },
     right: function (aTabs) {
       let ary = aTabs || collection();
@@ -67,7 +67,7 @@ liberator.plugins.browser_object_api = (function () {
 
 
   /* BrowserObject API Support */
-    charToWhere: function (str, fail) {
+    _charToWhere: function (str, fail) {
     // via. lo.js
       const table = {
         l: browser_object_api.left,
@@ -79,10 +79,10 @@ liberator.plugins.browser_object_api = (function () {
         d: browser_object_api.descendant,
         t: browser_object_api.tree,
       };
-      return (str && (str.charAt(0) == "-") && table[str.charAt(1).toLowerCase()]) || fail;
+      return ((str && (str.charAt(0) == "-") && table[str.charAt(1).toLowerCase()]) || fail || browser_object_api.current)();
     },
     select: function (command, count, func, limit) {
-      let aTabs = let (tabs = browser_object_api.charToWhere(command)) (count && tabs.slice(0, count + 1)) || tabs;
+      let aTabs = let (tabs = browser_object_api._charToWhere(command)) (count && tabs.slice(0, count + 1)) || tabs;
       if (func && typeof(func) == "function")
       {
         if (aTabs.length <= (limit || 15))
