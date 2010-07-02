@@ -6,7 +6,7 @@
       ['tabb[o]'], ':tabdo + BrowserObject',
       function (args) {
         let current = browser_object_api.current();
-        browser_object_api.select(args.string, args["-number"]).forEach(function (aTab) {
+        browser_object_api.select(args.string, args["-number"], function (aTab) {
           tabs.select(aTab._tPos);
           liberator.execute(args[0], null, true);
         });
@@ -31,7 +31,7 @@
           [sc___ + "[" + __ope + "]"], ':tabbo ' + scope,
           function (args) {
             let current = browser_object_api.current();
-            browser_object_api.select(scope, args["-number"]).forEach(function (aTab) {
+            browser_object_api.select(scope, args["-number"], function (aTab) {
               tabs.select(aTab._tPos);
               liberator.execute(args[0], null, true);
             });

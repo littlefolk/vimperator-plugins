@@ -81,9 +81,20 @@ liberator.plugins.browser_object_api = (function () {
       };
       return (str && (str.charAt(0) == "-") && table[str.charAt(1).toLowerCase()]) || fail;
     },
-    select: function (str, count) {
-      let tabs = browser_object_api.charToWhere(str, browser_object_api.current)();
-      return (count && tabs.slice(0, count + 1)) || tabs;
+    select: function (command, count, func, limit) {
+      let aTabs = let (tabs = browser_object_api.charToWhere(command)) (count && tabs.slice(0, count + 1)) || tabs;
+      if (func && typeof(func) == "function")
+      {
+        if (aTabs.length <= (limit || 15))
+          aTabs.forEach(func)
+        else
+          commandline.input(
+            "Selected " + aTabs.length + " tabs, Do? [Y/n]: ",
+            function (input) commandline.close() || (input && input.charAt(0).toLowerCase() == "y") && aTabs.forEach(func)
+          );
+      }
+      else
+        return aTabs;
     },
     options: [
       [['-left'      , '-l'], commands.OPTION_NOARG],

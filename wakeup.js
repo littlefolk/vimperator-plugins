@@ -14,7 +14,7 @@
         else if (args.bang)
           browser_object_api.all().forEach(function (aTab) gBrowser.BarTabHandler.loadTab(aTab));
         else if (args.string)
-          browser_object_api.select(args.string, args["-number"]).forEach(function (aTab) gBrowser.BarTabHandler.loadTab(aTab));
+          browser_object_api.select(args.string, args["-number"], function (aTab) gBrowser.BarTabHandler.loadTab(aTab));
       },
       {
         options: browser_object_api.options,
@@ -41,7 +41,7 @@
           [modes.NORMAL],
           [(liberator.globalVariables.browser_object_prefix || "") + "w" + _ + "t"],
           "wakeup " + scope + " tabs",
-          function (count) browser_object_api.select("-" + _, count).forEach(function (aTab) gBrowser.BarTabHandler.loadTab(aTab)),
+          function (count) browser_object_api.select("-" + _, count, function (aTab) gBrowser.BarTabHandler.loadTab(aTab)),
           {count: true}
         );
       });
