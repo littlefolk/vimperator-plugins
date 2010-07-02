@@ -41,6 +41,7 @@
             argCount: "1",
             completer: function (context) completion.ex(context),
             literal: 0,
+            options: [[['-number', '-n'], commands.OPTION_INT]],
           },
           true
         );
