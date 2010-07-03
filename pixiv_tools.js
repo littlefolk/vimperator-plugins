@@ -20,27 +20,29 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
   // }}}
   // Public {{{
   let self = {
+    SETTING: {
+      EXPIRE: 60 * 60 * 24 * 1000,
+
+      ADD_PUBLIC: {
+        user   : true,
+        illust : false,
+      },
+
+      COMPLETION: {
+        // CompletionTags Show
+        //   "both"          : Bookmark && Illust
+        //   "illust"        : Illust - Bookmark
+        //   "illust-full"   : Illust
+        //   "bookmark"      : Bookmark - Illust
+        //   "bookmark-full" : Bookmark
+        //   "sep"           : Separator Space
+        tag: ["both", "bookmark", "illust"],
+        // Descending Order of Bookmark Count
+        sort: true,
+      },
+    },
+
     STORE: storage.newMap("pixiv_tools", {store: true}),
-
-    EXPIRE: 60 * 60 * 24 * 1000,
-
-    ADD_PUBLIC: {
-      user   : true,
-      illust : false,
-    },
-
-    COMPLETION: {
-      // CompletionTags Show
-      //   "both"          : Bookmark && Illust
-      //   "illust"        : Illust - Bookmark
-      //   "illust-full"   : Illust
-      //   "bookmark"      : Bookmark - Illust
-      //   "bookmark-full" : Bookmark
-      //   "sep"           : Separator Space
-      tag: ["both", "illust", "bookmark"],
-      // Descending Order of Bookmark Count
-      sort: true,
-    },
 
     PAGE_MESSAGE: {
       success    : "\u8ffd\u52a0\u3057\u307e\u3057\u305f",                         // # 追加しました
@@ -210,7 +212,7 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
   {
     let data = self.STORE.get("data", null);
     let now = new Date().getTime();
-    if (!data || _getFlag || ((now - self.STORE.get("EXPIRE", 0)) >= self.EXPIRE))
+    if (!data || _getFlag || ((now - self.STORE.get("EXPIRE", 0)) >= self.SETTING.EXPIRE))
     {
       let req = new libly.Request(
         "http://www.pixiv.net/bookmark.php",
@@ -255,11 +257,11 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
       _dict["illust"] = _dict["illust-full"].filter(function ([t, d]) !_c[t]);
       _dict["bookmark"] = _dict["bookmark-full"].filter(function ([t, d]) !_c[t]);
     };
-    let sortFunc = (self.COMPLETION.sort)?
+    let sortFunc = (self.SETTING.COMPLETION.sort)?
       let (_calc = function ([t, d]) (d == self.ECHO_MESSAGE["reqtag"])? t: d.match(/\d+/g).map(parseFloat).reduce(function (a, b) a + b))
         function (arr) arr.sort(function (a, b) CompletionContext.Sort.number(_calc(a), _calc(b))):
       util.identity;
-    return util.Array.flatten((self.COMPLETION.tag || ["illust-full", "bookmark-full"]).map(function (key) sortFunc(_dict[key] || [])));
+    return util.Array.flatten((self.SETTING.COMPLETION.tag || ["illust-full", "bookmark-full"]).map(function (key) sortFunc(_dict[key] || [])));
   };
 
   let _postBookmark = function (type, tag, limit)
@@ -275,7 +277,7 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
         type: type,
         id: self.ID[type],
         tag: tag || "",
-        restrict: (self.ADD_PUBLIC[type]? "0": "1"),
+        restrict: (self.SETTING.ADD_PUBLIC[type]? "0": "1"),
         tt: self.ID.TT || "",
       })}
     );
