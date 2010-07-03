@@ -191,10 +191,10 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
       //      大画像が画面右にはみ出したら、はみ出た分だけ左に寄せて、
       //      大画像が画面左にはみ出したら、左端から始める。
       // y: 中画像の上辺
-      let x = (MiddleImage.offsetLeft + Content.offsetLeft) + (MiddleImage.width / 2) - (BigImageElem.naturalWidth / 2) - 3;
-          x = let (drop = (x + BigImageElem.naturalWidth) - Body.clientWidth) (drop >= 0)? x - drop - 5: x;
-          x = (x <= 0)? 0: x;
-      let y = MiddleImage.offsetTop + Content.offsetTop - 3;
+      let x = (MiddleImage.offsetLeft + Content.offsetLeft) + (MiddleImage.width / 2) - (BigImageElem.naturalWidth / 2);
+          x = let (drop = (x + BigImageElem.naturalWidth + 2) - Body.clientWidth) (drop > 0)? x - drop - 2: x;
+          x = (x <= 0)? 0: x - 2;
+      let y = MiddleImage.offsetTop + Content.offsetTop - 2;
       
       BigImageElem.id = "BigImage";
       BigImageElem.setAttribute("style", "position: absolute; border : 3px ridge #B7B7B7; z-index : 999; opacity: 1; background-color : #fff;");
