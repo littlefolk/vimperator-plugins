@@ -5,18 +5,38 @@
     commands.addUserCommand(
       ['tabb[o]'], ':tabdo + BrowserObject',
       function (args) {
-        let current = browser_object_api.current();
-        browser_object_api.select(args.string, args["-number"], function (aTab) {
-          tabs.select(aTab._tPos);
-          liberator.execute(args[0], null, true);
-        });
-        tabs.select(current[0]._tPos);
+        if (args.literalArg != "")
+        {
+          let current = browser_object_api.current();
+          browser_object_api.select(args.string, args["-number"], function (aTab) {
+            tabs.select(aTab._tPos);
+            liberator.execute(args[0], null, true);
+          });
+          tabs.select(current[0]._tPos);
+        }
+        else
+        {
+          let context = CompletionContext(args["-filter"] || "");
+          let items = browser_object_api.select(args.string, args["-number"]);
+          let list = template.commandOutput(
+              <div highlight="Completions">
+                  { template.completionRow(['Buffer','URL'], "CompTitle") }
+                  { template.map(items, function (item) context.createRow({
+                      text: item.label,
+                      description: item.linkedBrowser.currentURI.spec,
+                      icon: item.image || DEFAULT_FAVICON,
+                    }), null, 100) }
+              </div>);
+          commandline.echo(list, commandline.HL_NORMAL, commandline.FORCE_MULTILINE);
+        };
       },
       {
-        argCount: "1",
+        argCount: "?",
         completer: function (context) completion.ex(context),
         literal: 0,
-        options: browser_object_api.options,
+        options: browser_object_api.options.concat([
+          [['-filter', '-f'], commands.OPTION_STRING],
+        ]),
       },
       true
     );
@@ -30,18 +50,39 @@
         commands.addUserCommand(
           [sc___ + "[" + __ope + "]"], ':tabbo ' + scope,
           function (args) {
-            let current = browser_object_api.current();
-            browser_object_api.select(scope, args["-number"], function (aTab) {
-              tabs.select(aTab._tPos);
-              liberator.execute(args[0], null, true);
-            });
-            tabs.select(current[0]._tPos);
+            if (args.literalArg != "")
+            {
+              let current = browser_object_api.current();
+              browser_object_api.select(scope, args["-number"], function (aTab) {
+                tabs.select(aTab._tPos);
+                liberator.execute(args[0], null, true);
+              });
+              tabs.select(current[0]._tPos);
+            }
+            else
+            {
+              let context = CompletionContext(args["-filter"] || "");
+              let items = browser_object_api.select(scope, args["-number"]);
+              let list = template.commandOutput(
+                  <div highlight="Completions">
+                      { template.completionRow(['Buffer','URL'], "CompTitle") }
+                      { template.map(items, function (item) context.createRow({
+                          text: item.label,
+                          description: item.linkedBrowser.currentURI.spec,
+                          icon: item.image || DEFAULT_FAVICON,
+                        }), null, 100) }
+                  </div>);
+              commandline.echo(list, commandline.HL_NORMAL, commandline.FORCE_MULTILINE);
+            };
           },
           {
-            argCount: "1",
+            argCount: "?",
             completer: function (context) completion.ex(context),
             literal: 0,
-            options: [[['-number', '-n'], commands.OPTION_INT]],
+            options: [
+              [['-number', '-n'], commands.OPTION_INT],
+              [['-filter', '-f'], commands.OPTION_STRING],
+            ],
           },
           true
         );
