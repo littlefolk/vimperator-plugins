@@ -2,91 +2,65 @@
 // @http://code.google.com/p/vimperator-labs/source/browse/common/content/tabs.js#645
 (function(){
   if (liberator.plugins.browser_object_api) {
-    commands.addUserCommand(
-      ['tabb[o]'], ':tabdo + BrowserObject',
-      function (args) {
-        if (args.literalArg != "")
-        {
-          let current = browser_object_api.current();
-          browser_object_api.select(args.string, args["-number"], function (aTab) {
-            tabs.select(aTab._tPos);
-            liberator.execute(args[0], null, true);
-          });
-          tabs.select(current[0]._tPos);
-        }
-        else
-        {
-          let context = CompletionContext(args["-filter"] || "");
-          let items = browser_object_api.select(args.string, args["-number"]);
-          let list = template.commandOutput(
-              <div highlight="Completions">
-                  { template.completionRow(['Buffer','URL'], "CompTitle") }
-                  { template.map(items, function (item) context.createRow({
-                      text: item.label,
-                      description: item.linkedBrowser.currentURI.spec,
-                      icon: item.image || DEFAULT_FAVICON,
-                    }), null, 100) }
-              </div>);
-          commandline.echo(list, commandline.HL_NORMAL, commandline.FORCE_MULTILINE);
-        };
-      },
-      {
-        argCount: "?",
-        completer: function (context) completion.ex(context),
-        literal: 0,
-        options: browser_object_api.options.concat([
-          [['-filter', '-f'], commands.OPTION_STRING],
-        ]),
-      },
-      true
-    );
-
-    browser_object_api.options.
-      filter(function (arr) (arr[1] == commands.OPTION_NOARG)).
-      map(function (arr) arr[0][0]).
-      forEach(function (scope) {
-        let sc___ = scope.slice(1, 3);
-        let __ope = scope.slice(3);
-        commands.addUserCommand(
-          [sc___ + "[" + __ope + "]"], ':tabbo ' + scope,
-          function (args) {
-            if (args.literalArg != "")
-            {
-              let current = browser_object_api.current();
-              browser_object_api.select(scope, args["-number"], function (aTab) {
-                tabs.select(aTab._tPos);
-                liberator.execute(args[0], null, true);
-              });
-              tabs.select(current[0]._tPos);
-            }
-            else
-            {
-              let context = CompletionContext(args["-filter"] || "");
-              let items = browser_object_api.select(scope, args["-number"]);
-              let list = template.commandOutput(
-                  <div highlight="Completions">
-                      { template.completionRow(['Buffer','URL'], "CompTitle") }
-                      { template.map(items, function (item) context.createRow({
-                          text: item.label,
-                          description: item.linkedBrowser.currentURI.spec,
-                          icon: item.image || DEFAULT_FAVICON,
-                        }), null, 100) }
-                  </div>);
-              commandline.echo(list, commandline.HL_NORMAL, commandline.FORCE_MULTILINE);
-            };
-          },
+    [[['tabb[o]'], ':tabdo + BrowserObject']].concat(
+      browser_object_api.options.
+        filter(function (arr) (arr[1] == commands.OPTION_NOARG)).
+        map(function (arr) arr[0][0]).
+        map(function (scope) [[scope.slice(1, 3) + "[" + scope.slice(3) + "]"], ':tabbo ' + scope, scope])
+    ).forEach(function ([cmd, desc, scope]) {
+      commands.addUserCommand(
+        cmd, desc,
+        function (args) {
+          if (args.literalArg != "")
           {
-            argCount: "?",
-            completer: function (context) completion.ex(context),
-            literal: 0,
-            options: [
+            let current = browser_object_api.current();
+            browser_object_api.select(scope || args.string, args["-number"], function (aTab) {
+              tabs.select(aTab._tPos);
+              liberator.execute(args[0], null, true);
+            });
+            tabs.select(current[0]._tPos);
+          }
+          else
+          {
+            let context = CompletionContext(args["-filter"] || "");
+            context.title = ['Buffer','URL'];
+            context.filters = [CompletionContext.Filter.textDescription];
+            context.keys = {
+              text: function (item) item._tPos + 1 + ": " + (item.label || "(Untitled)"),
+              description: function (item) item.linkedBrowser.currentURI.spec,
+              icon: function (item) item.image || DEFAULT_FAVICON,
+              indicator: function (item) let (i = item._tPos) (i == tabs.index() && "%") || (i == tabs.index(tabs.alternate) && "#") || " ",
+            };
+            context.completions = browser_object_api.select(scope || args.string, args["-number"]);
+            let process = context.process[0];
+            context.process = [function (item, text) <>
+              <span highlight="Indicator" style="display: inline-block; width: 2em; text-align: center">{item.indicator}</span>
+              { process.call(this, item, text) }
+            </>];
+            let list = template.commandOutput(
+              <div highlight="Completions">
+                { template.completionRow(context.title, "CompTitle") }
+                { template.map(context.items, function (item) context.createRow(item), null, 100) }
+              </div>);
+            commandline.echo(list, commandline.HL_NORMAL, commandline.FORCE_MULTILINE);
+          };
+        },
+        {
+          argCount: "?",
+          completer: function (context) completion.ex(context),
+          literal: 0,
+          options: (scope)?
+            [
               [['-number', '-n'], commands.OPTION_INT],
               [['-filter', '-f'], commands.OPTION_STRING],
-            ],
-          },
-          true
-        );
-      });
+            ]:
+            browser_object_api.options.concat([
+              [['-filter', '-f'], commands.OPTION_STRING],
+            ]),
+        },
+        true
+      );
+    });
   };
 })();
 
