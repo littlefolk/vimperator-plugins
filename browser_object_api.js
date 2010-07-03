@@ -1,116 +1,168 @@
 // BrowserObject API -- liberator.plugins.browser_object_api {{{
-// @http://coderepos.org/share/browser/lang/javascript/vimperator-plugins/trunk/browser_object.js
-// @http://piro.sakura.ne.jp/latest/blosxom/mozilla/xul/2009-01-24_tab.htm
 liberator.plugins.browser_object_api = (function () {
-  let collection = function () Array.slice(gBrowser.mTabs).filter(function (aNode) aNode.localName == 'tab');
-  let active = function () gBrowser.mTabContainer.selectedIndex;
-  let identify = function (i) {try{return i.linkedBrowser.contentDocument.location.host}catch(e){}};
-  let browser_object_api = {
-  /* BrowserObject API */
-    current: function () {
-      return [gBrowser.mCurrentTab];
-    },
-    all: function () {
-      let ary = collection(), len = ary.length;
-      let res = [ary[i] for (i in ary) if(i < len)];
-      return res;
-    },
-    left: function (aTabs) {
-      let ary = aTabs || collection();
-      let res = [ary[i] for (i in ary) if(ary[i]._tPos <= active())];
-      return res.reverse();
-    },
-    right: function (aTabs) {
-      let ary = aTabs || collection();
-      let res = [ary[i] for (i in ary) if(ary[i]._tPos >= active())];
-      return res;
-    },
-    other: function (aTabs) {
-      let ary = aTabs || collection();
-      let res = [ary[i] for (i in ary) if(ary[i]._tPos != active())];
-      return res;
-    },
-    same: function (aTabs) {
-      let ary = aTabs || collection(), activeIdentify = identify(gBrowser.mCurrentTab);
-      let res = [ary[i] for (i in ary) if(identify(ary[i]) == activeIdentify)];
-      return res;
+  let Selectors = { // {{{
+    // @http://piro.sakura.ne.jp/latest/blosxom/mozilla/xul/2009-01-24_tab.htm
+    get collection()
+      Array.filter(gBrowser.mTabs, function (aNode) aNode.localName == "tab"),
+
+    get active()
+      gBrowser.mTabContainer.selectedIndex,
+
+    // @http://coderepos.org/share/browser/lang/javascript/vimperator-plugins/trunk/browser_object.js
+    Base: {
+      current: function ()
+        [gBrowser.mCurrentTab],
+
+      all: function () {
+        let ary = Selectors.collection;
+        return [ary[i] for (i in ary) if (i < ary.length)];
+      },
+
+      left: function (scope) {
+        let ary = Support.toTabs(scope) || Selectors.collection;
+        return [ary[i] for (i in ary) if (ary[i]._tPos <= Selectors.active)].reverse();
+      },
+
+      right: function (scope) {
+        let ary = Support.toTabs(scope) || Selectors.collection;
+        return [ary[i] for (i in ary) if (ary[i]._tPos >= Selectors.active)];
+      },
+
+      other: function (scope) {
+        let ary = Support.toTabs(scope) || Selectors.collection;
+        return [ary[i] for (i in ary) if (ary[i]._tPos != Selectors.active)];
+      },
+
+      same: function (scope) {
+        let identify = function (i) {try{return i.linkedBrowser.contentDocument.location.host}catch(e){}};
+        let ary = Support.toTabs(scope) || Selectors.collection, activeIdentify = identify(gBrowser.mCurrentTab);
+        return [ary[i] for (i in ary) if (identify(ary[i]) == activeIdentify)];
+      },
     },
 
-
-  /* TreeStyleTab API */
     // @http://piro.sakura.ne.jp/xul/_treestyletab.html#focused-folding-item(folding-item-api-20)
     // @http://piro.sakura.ne.jp/xul/_treestyletab.html#focused-folding-item(folding-item-api-17)
-    root: function (aTab)
-      TreeStyleTabService.getRootTab(aTab || gBrowser.mCurrentTab),
+    TreeStyleTab: {
+      root: function (aTab)
+        TreeStyleTabService.getRootTab(aTab || gBrowser.mCurrentTab),
 
-    child: function (aRoot)
-      TreeStyleTabService.getChildTabs(aRoot || gBrowser.mCurrentTab),
+      child: function (aRoot)
+        TreeStyleTabService.getChildTabs(aRoot || gBrowser.mCurrentTab),
 
-    descendant: function (aRoot)
-      TreeStyleTabService.getDescendantTabs(aRoot || gBrowser.mCurrentTab),
+      descendant: function (aRoot)
+        TreeStyleTabService.getDescendantTabs(aRoot || gBrowser.mCurrentTab),
 
-    tree: function (aRoot)
-      [aRoot || browser_object_api.root()].concat(browser_object_api.descendant(aRoot || browser_object_api.root())),
+      tree: function (aRoot)
+        let (TST = Selectors.TreeStyleTab)
+          [aRoot || TST.root()].concat(TST.descendant(aRoot || TST.root())),
+    },
 
-
-  /* BarTab API */
     // @http://github.com/philikon/BarTab/blob/master/modules/prototypes.js#L237
     // @http://github.com/philikon/BarTab/blob/master/modules/prototypes.js#L246
-    istap: function (aTab)
-      (aTab.getAttribute("ontap") == "true"),
+    BarTab: {
+      istap: function (aTab)
+        (aTab.getAttribute("ontap") == "true"),
 
-    loaded: function (aTabs) 
-      (aTabs || browser_object_api.all()).filter(function (aTab) !browser_object_api.istap(aTab)),
+      loaded: function (scope)
+        (Support.toTabs(scope) || Selectors.Base.all()).filter(function (aTab) !Selectors.BarTab.istap(aTab)),
 
-    unload: function (aTabs) 
-      (aTabs || browser_object_api.all()).filter(function (aTab) browser_object_api.istap(aTab)),
-
-
-  /* BrowserObject API Support */
-    _charToWhere: function (str, fail) {
-    // via. lo.js
-      const table = {
-        l: browser_object_api.left,
-        r: browser_object_api.right,
-        a: browser_object_api.all,
-        o: browser_object_api.other,
-        s: browser_object_api.same,
-        c: browser_object_api.child,
-        d: browser_object_api.descendant,
-        t: browser_object_api.tree,
-      };
-      return ((str && (str.charAt(0) == "-") && table[str.charAt(1).toLowerCase()]) || fail || browser_object_api.current)();
+      unload: function (scope)
+        (Support.toTabs(scope) || Selectors.Base.all()).filter(function (aTab) Selectors.BarTab.istap(aTab)),
     },
-    select: function (command, count, func, limit) {
-      let aTabs = let (tabs = browser_object_api._charToWhere(command)) (count && tabs.slice(0, count + 1)) || tabs;
-      if (func && typeof(func) == "function")
+  }; // }}}
+
+  let Support = { // {{{
+    toTabs: function (scope, fail)
+      ((scope && typeof (scope) == "string") && Support.charToWhere(scope, fail)) || ((scope && util.Array.isinstance(scope)) && scope),
+
+    // @http://coderepos.org/share/browser/lang/javascript/vimperator-plugins/trunk/lo.js
+    charToWhere: function (str, fail) {
+      const table = {
+        l: Selectors.Base.left,
+        r: Selectors.Base.right,
+        a: Selectors.Base.all,
+        o: Selectors.Base.other,
+        s: Selectors.Base.same,
+        c: Selectors.TreeStyleTab.child,
+        d: Selectors.TreeStyleTab.descendant,
+        t: Selectors.TreeStyleTab.tree,
+      };
+      return ((str && (str.charAt(0) == "-") && table[str.charAt(1).toLowerCase()]) || fail || Selectors.Base.current)();
+    },
+
+    options: [
+      [["-left"      , "-l"], commands.OPTION_NOARG],
+      [["-right"     , "-r"], commands.OPTION_NOARG],
+      [["-all"       , "-a"], commands.OPTION_NOARG],
+      [["-other"     , "-o"], commands.OPTION_NOARG],
+      [["-same"      , "-s"], commands.OPTION_NOARG],
+      [["-child"     , "-c"], commands.OPTION_NOARG],
+      [["-descendant", "-d"], commands.OPTION_NOARG],
+      [["-tree"      , "-t"], commands.OPTION_NOARG],
+
+      [["-number"    , "-n"], commands.OPTION_INT],
+    ],
+  }; // }}}
+
+  let Functions = { // {{{
+    /*
+     * Use
+     *   select("-right", {count: 15})
+     *
+     * @param {string} || {collection}
+     * @param {Object}
+     *   count : {number}
+     *   fail  : {function}
+     */
+    select: function (scope, option)
+    {
+      let option = option || {};
+      let aTabs = Support.toTabs(scope, option.fail);
+
+      if (option.count)
+        aTabs = aTabs.slice(0, option.count + 1);
+
+      return aTabs;
+    },
+
+    /*
+     * Use
+     *   forEach("-right", {count: 15, limit: 25}, function (aTab) liberator.echo(aTab))
+     *
+     * @param {string} || {collection}
+     * @param {Object}
+     *   count : {number}
+     *   limit : {number}
+     *   fail  : {function}
+     * @param {function}
+     */
+     forEach: function (scope, option, func)
+     {
+      let aTabs = Functions.select(scope, option);
+
+      if (func && Object.prototype.toString.call(func) === "[object Function]")
       {
-        if (aTabs.length <= (limit || 15))
+        if (aTabs.length <= (option.limit || 25))
           aTabs.forEach(func)
         else
           commandline.input(
             "Selected " + aTabs.length + " tabs, Do? [Y/n]: ",
             function (input) commandline.close() || (input && input.charAt(0).toLowerCase() == "y") && aTabs.forEach(func)
           );
-      }
-      else
-        return aTabs;
+      };
     },
-    options: [
-      [['-left'      , '-l'], commands.OPTION_NOARG],
-      [['-right'     , '-r'], commands.OPTION_NOARG],
-      [['-all'       , '-a'], commands.OPTION_NOARG],
-      [['-other'     , '-o'], commands.OPTION_NOARG],
-      [['-same'      , '-s'], commands.OPTION_NOARG],
-      [['-child'     , '-c'], commands.OPTION_NOARG],
-      [['-descendant', '-d'], commands.OPTION_NOARG],
-      [['-tree'      , '-t'], commands.OPTION_NOARG],
+  }; // }}}
 
-      [['-number'    , '-n'], commands.OPTION_INT],
-    ],
+  return {
+    Selectors: Selectors,
+    Support: Support,
+    Functions: Functions,
+    select: Functions.select,
+    forEach: Functions.forEach,
+    options: Support.options.
+      filter(function (arr) (arr[1] == commands.OPTION_NOARG)).
+      map(function (arr) arr[0][0]),
   };
-
-  return browser_object_api;
 })();
 
 // }}}
