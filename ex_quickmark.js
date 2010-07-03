@@ -54,15 +54,14 @@ liberator.plugins.exqmarks = (function () {
           (qmark && arg) && this.func(qmark, arg),
         func: function (qmark, location) {
           $.set(qmark, $.get(qmark).concat(
-            (browser_object_api[location])?
-              browser_object_api[location]().map(function (aTab) aTab.linkedBrowser.lastURI.spec):
-              $.util.toArray($.util.toString(Commands.argTypes[commands.OPTION_LIST].parse(toString(location))))
+            let (res = browser_object_api.select("-" + $.util.toString(location).slice(1), {fail: function () false})) res?
+              res.map(function (aTab) aTab.linkedBrowser.lastURI.spec):
+              $.util.toArray($.util.toString(Commands.argTypes[commands.OPTION_LIST].parse($.util.toString(location))))
           ));
           $.util.echo("Append '" + qmark + "' @ " + location);
         },
         completer: browser_object_api.options
-                     .filter(function (arr) (arr[1] == commands.OPTION_NOARG))
-                     .map(function (arr) arr[0][0].slice(1))
+                     .map(function (str) "@" + str.slice(1))
                      .map(function (str) [str, "BrowserObject " + str]),
       },
 

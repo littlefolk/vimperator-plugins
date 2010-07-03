@@ -5,9 +5,9 @@
       // Countがタブの先端・終端を越える数だけ与えられた場合に、反対側に飛んで続けるか、端で止まるか。
       loop: true,
     };
-    let bo = liberator.plugins.browser_object_api;
+    let bo = liberator.plugins.browser_object_api.Selectors;
     let ts = TreeStyleTabService;
-    let tap = function () (bo.istap(gBrowser.mCurrentTab)? 0: 1);
+    let tap = function () (bo.BarTab.istap(gBrowser.mCurrentTab)? 0: 1);
     let select = function (candidate, all, count, flag) {
       let carryover = (OPTION.loop)?
         function (all, remnant, count) {
@@ -26,16 +26,16 @@
     [
       [
         ['gj', 'sj'], 'Go to the next tab *loaded*.',
-        function (count) select(bo.loaded(bo.right()), bo.loaded(), count),
+        function (count) select(bo.BarTab.loaded("-right"), bo.BarTab.loaded(), count),
       ], [
         ['gk', 'sk'], 'Go to the previous tab *loaded*.',
-        function (count) select(bo.loaded(bo.left()).reverse(), bo.loaded().reverse(), count),
+        function (count) select(bo.BarTab.loaded("-left"), bo.BarTab.loaded().reverse(), count),
       ], [
         ['gJ', 'sJ'], 'Go to the next *root* tab *loaded*.',
-        function (count) select(bo.right(bo.loaded(ts.rootTabs)), bo.loaded(ts.rootTabs), count, true),
+        function (count) select(bo.Base.right(bo.BarTab.loaded(ts.rootTabs)), bo.BarTab.loaded(ts.rootTabs), count, true),
       ], [
         ['gK', 'sK'], 'Go to the previous *root* tab *loaded*.',
-        function (count) select(bo.left(bo.loaded(ts.rootTabs)).reverse(), bo.loaded(ts.rootTabs).reverse(), count, true),
+        function (count) select(bo.Base.left(bo.BarTab.loaded(ts.rootTabs)), bo.BarTab.loaded(ts.rootTabs).reverse(), count, true),
       ],
     ].forEach(function ([keys, description, action]) mappings.addUserMap([modes.NORMAL], keys, description, action, {count: true}));
   };

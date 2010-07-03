@@ -3,18 +3,15 @@
 (function(){
   if (liberator.plugins.browser_object_api) {
     [[['tabb[o]'], ':tabdo + BrowserObject']].concat(
-      browser_object_api.options.
-        filter(function (arr) (arr[1] == commands.OPTION_NOARG)).
-        map(function (arr) arr[0][0]).
-        map(function (scope) [[scope.slice(1, 3) + "[" + scope.slice(3) + "]"], ':tabbo ' + scope, scope])
+      browser_object_api.options.map(function (scope) [[scope.slice(1, 3) + "[" + scope.slice(3) + "]"], ':tabbo ' + scope, scope])
     ).forEach(function ([cmd, desc, scope]) {
       commands.addUserCommand(
         cmd, desc,
         function (args) {
           if (args.literalArg != "")
           {
-            let current = browser_object_api.current();
-            browser_object_api.select(scope || args.string, args["-number"], function (aTab) {
+            let current = browser_object_api.Selectors.Base.current();
+            browser_object_api.forEach(scope || args.string, {count: args["-number"]}, function (aTab) {
               tabs.select(aTab._tPos);
               liberator.execute(args[0], null, true);
             });
@@ -31,7 +28,7 @@
               icon: function (item) item.image || DEFAULT_FAVICON,
               indicator: function (item) let (i = item._tPos) (i == tabs.index() && "%") || (i == tabs.index(tabs.alternate) && "#") || " ",
             };
-            context.completions = browser_object_api.select(scope || args.string, args["-number"]);
+            context.completions = browser_object_api.select(scope || args.string, {count: args["-number"]});
             let process = context.process[0];
             context.process = [function (item, text) <>
               <span highlight="Indicator" style="display: inline-block; width: 2em; text-align: center">{item.indicator}</span>
@@ -54,7 +51,7 @@
               [['-number', '-n'], commands.OPTION_INT],
               [['-filter', '-f'], commands.OPTION_STRING],
             ]:
-            browser_object_api.options.concat([
+            browser_object_api.Support.options.concat([
               [['-filter', '-f'], commands.OPTION_STRING],
             ]),
         },
