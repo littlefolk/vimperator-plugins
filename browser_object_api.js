@@ -107,12 +107,14 @@ liberator.plugins.browser_object_api = (function () {
   let Functions = { // {{{
     /*
      * Use
-     *   select("-right", {count: 15})
+     *   select("-right", {count: 15, filter: "hoge"})
      *
      * @param {string} || {collection}
      * @param {Object}
-     *   count : {number}
-     *   fail  : {function}
+     *   count      : {number}
+     *   filter     : {string}
+     *   ignoreCase : {boolean}
+     *   fail       : {function}
      */
     select: function (scope, option)
     {
@@ -121,19 +123,29 @@ liberator.plugins.browser_object_api = (function () {
 
       if (option.count)
         aTabs = aTabs.slice(0, option.count + 1);
+      if (option.filter)
+      {
+        let fixCase = (option.ignoreCase || true)? String.toLowerCase: util.identity;
+        aTabs = aTabs.filter(function (aTab)
+          ~fixCase(aTab.label).indexOf(fixCase(option.filter)) ||
+          ~fixCase(aTab.linkedBrowser.currentURI.spec).indexOf(fixCase(option.filter))
+        );
+      };
 
       return aTabs;
     },
 
     /*
      * Use
-     *   forEach("-right", {count: 15, limit: 25}, function (aTab) liberator.echo(aTab))
+     *   forEach("-right", {count: 15, limit: 25, filter: "hoge"}, function (aTab) liberator.echo(aTab))
      *
      * @param {string} || {collection}
      * @param {Object}
-     *   count : {number}
-     *   limit : {number}
-     *   fail  : {function}
+     *   count      : {number}
+     *   limit      : {number}
+     *   filter     : {string}
+     *   ignoreCase : {boolean}
+     *   fail       : {function}
      * @param {function}
      */
      forEach: function (scope, option, func)

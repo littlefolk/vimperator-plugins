@@ -11,7 +11,7 @@
           if (args.literalArg != "")
           {
             let current = browser_object_api.Selectors.Base.current();
-            browser_object_api.forEach(scope || args.string, {count: args["-number"]}, function (aTab) {
+            browser_object_api.forEach(scope || args.string, {count: args["-number"], filter: args["-filter"]}, function (aTab) {
               tabs.select(aTab._tPos);
               liberator.execute(args[0], null, true);
             });
