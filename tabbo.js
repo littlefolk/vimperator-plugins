@@ -19,7 +19,7 @@
           }
           else
           {
-            let context = CompletionContext(args["-filter"] || "");
+            let context = CompletionContext("");
             context.title = ['Buffer','URL'];
             context.filters = [CompletionContext.Filter.textDescription];
             context.keys = {
@@ -28,7 +28,7 @@
               icon: function (item) item.image || DEFAULT_FAVICON,
               indicator: function (item) let (i = item._tPos) (i == tabs.index() && "%") || (i == tabs.index(tabs.alternate) && "#") || " ",
             };
-            context.completions = browser_object_api.select(scope || args.string, {count: args["-number"]});
+            context.completions = browser_object_api.select(scope || args.string, {count: args["-number"], filter: args["-filter"]});
             let process = context.process[0];
             context.process = [function (item, text) <>
               <span highlight="Indicator" style="display: inline-block; width: 2em; text-align: center">{item.indicator}</span>

@@ -107,7 +107,7 @@ liberator.plugins.browser_object_api = (function () {
   let Functions = { // {{{
     /*
      * Use
-     *   select("-right", {count: 15, filter: "hoge"})
+     *   select("-right", {count: 15, filter: "\\d+"})
      *
      * @param {string} || {collection}
      * @param {Object}
@@ -124,20 +124,15 @@ liberator.plugins.browser_object_api = (function () {
       if (option.count)
         aTabs = aTabs.slice(0, option.count + 1);
       if (option.filter)
-      {
-        let fixCase = (option.ignoreCase || true)? String.toLowerCase: util.identity;
-        aTabs = aTabs.filter(function (aTab)
-          ~fixCase(aTab.label).indexOf(fixCase(option.filter)) ||
-          ~fixCase(aTab.linkedBrowser.currentURI.spec).indexOf(fixCase(option.filter))
-        );
-      };
+        let (re = RegExp(option.filter, "i"))
+          aTabs = aTabs.filter(function (aTab) re.test(aTab.label) || re.test(aTab.linkedBrowser.currentURI.spec));
 
       return aTabs;
     },
 
     /*
      * Use
-     *   forEach("-right", {count: 15, limit: 25, filter: "hoge"}, function (aTab) liberator.echo(aTab))
+     *   forEach("-right", {count: 15, limit: 25, filter: "\\d+"}, function (aTab) liberator.echo(aTab))
      *
      * @param {string} || {collection}
      * @param {Object}
