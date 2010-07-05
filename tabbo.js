@@ -46,14 +46,7 @@
           argCount: "?",
           completer: function (context) completion.ex(context),
           literal: 0,
-          options: (scope)?
-            [
-              [['-number', '-n'], commands.OPTION_INT],
-              [['-filter', '-f'], commands.OPTION_STRING],
-            ]:
-            browser_object_api.Support.options.concat([
-              [['-filter', '-f'], commands.OPTION_STRING],
-            ]),
+          options: browser_object_api[(scope? "optionsPlus": "optionsFull")],
         },
         true
       );

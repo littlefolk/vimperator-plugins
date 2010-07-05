@@ -95,8 +95,11 @@ liberator.plugins.browser_object_api = (function () {
       [["-child"     , "-c"], commands.OPTION_NOARG],
       [["-descendant", "-d"], commands.OPTION_NOARG],
       [["-tree"      , "-t"], commands.OPTION_NOARG],
+    ],
 
+    optionsPlus: [
       [["-number"    , "-n"], commands.OPTION_INT],
+      [["-filter"    , "-f"], commands.OPTION_STRING],
     ],
   }; // }}}
 
@@ -162,9 +165,9 @@ liberator.plugins.browser_object_api = (function () {
     Functions: Functions,
     select: Functions.select,
     forEach: Functions.forEach,
-    options: Support.options.
-      filter(function (arr) (arr[1] == commands.OPTION_NOARG)).
-      map(function (arr) arr[0][0]),
+    options: Support.options.map(function (arr) arr[0][0]),
+    optionsPlus: Support.optionsPlus,
+    optionsFull: Support.options.concat(Support.optionsPlus),
   };
 })();
 

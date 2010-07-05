@@ -14,10 +14,10 @@
         else if (args.bang)
           browser_object_api.forEach("-all", {}, function (aTab) gBrowser.BarTabHandler.loadTab(aTab));
         else if (args.string)
-          browser_object_api.forEach(args.string, {count: args["-number"]}, function (aTab) gBrowser.BarTabHandler.loadTab(aTab));
+          browser_object_api.forEach(args.string, {count: args["-number"], filter: args["-filter"]}, function (aTab) gBrowser.BarTabHandler.loadTab(aTab));
       },
       {
-        options: browser_object_api.options,
+        options: browser_object_api.optionsFull,
         argCount: "?",
         bang: true,
         count: true,
