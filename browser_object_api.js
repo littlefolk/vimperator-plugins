@@ -1,5 +1,7 @@
 // BrowserObject API -- liberator.plugins.browser_object_api {{{
 liberator.plugins.browser_object_api = (function () {
+  let _migemo = liberator.hasExtension("XUL/Migemo");
+
   let Selectors = { // {{{
     // @http://piro.sakura.ne.jp/latest/blosxom/mozilla/xul/2009-01-24_tab.htm
     get collection()
@@ -111,10 +113,10 @@ liberator.plugins.browser_object_api = (function () {
      *
      * @param {string} || {collection}
      * @param {Object}
-     *   count      : {number}
-     *   filter     : {string}
-     *   ignoreCase : {boolean}
-     *   fail       : {function}
+     *   count  : {number}
+     *   filter : {string}
+     *   migemo : {boolean}
+     *   fail   : {function}
      */
     select: function (scope, option)
     {
@@ -124,7 +126,7 @@ liberator.plugins.browser_object_api = (function () {
       if (option.count)
         aTabs = aTabs.slice(0, option.count + 1);
       if (option.filter)
-        let (re = RegExp(option.filter, "i"))
+        let (re = RegExp((_migemo && option.migemo != false)? XMigemoCore.getRegExp(option.filter): option.filter, "i"))
           aTabs = aTabs.filter(function (aTab) re.test(aTab.label) || re.test(aTab.linkedBrowser.currentURI.spec));
 
       return aTabs;
@@ -136,11 +138,11 @@ liberator.plugins.browser_object_api = (function () {
      *
      * @param {string} || {collection}
      * @param {Object}
-     *   count      : {number}
-     *   limit      : {number}
-     *   filter     : {string}
-     *   ignoreCase : {boolean}
-     *   fail       : {function}
+     *   count  : {number}
+     *   limit  : {number}
+     *   filter : {string}
+     *   migemo : {boolean}
+     *   fail   : {function}
      * @param {function}
      */
      forEach: function (scope, option, func)
