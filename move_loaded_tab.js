@@ -29,13 +29,13 @@
         function (count) select(bo.BarTab.loaded("-right"), bo.BarTab.loaded(), count),
       ], [
         ['gk', 'sk'], 'Go to the previous tab *loaded*.',
-        function (count) select(bo.BarTab.loaded("-left"), bo.BarTab.loaded().reverse(), count),
+        function (count) select(bo.BarTab.loaded("-left").reverse(), bo.BarTab.loaded().reverse(), count),
       ], [
         ['gJ', 'sJ'], 'Go to the next *root* tab *loaded*.',
         function (count) select(bo.Base.right(bo.BarTab.loaded(ts.rootTabs)), bo.BarTab.loaded(ts.rootTabs), count, true),
       ], [
         ['gK', 'sK'], 'Go to the previous *root* tab *loaded*.',
-        function (count) select(bo.Base.left(bo.BarTab.loaded(ts.rootTabs)), bo.BarTab.loaded(ts.rootTabs).reverse(), count, true),
+        function (count) select(bo.Base.left(bo.BarTab.loaded(ts.rootTabs)).reverse(), bo.BarTab.loaded(ts.rootTabs).reverse(), count, true),
       ],
     ].forEach(function ([keys, description, action]) mappings.addUserMap([modes.NORMAL], keys, description, action, {count: true}));
   };

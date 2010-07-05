@@ -1,6 +1,7 @@
 // BrowserObject API -- liberator.plugins.browser_object_api {{{
 liberator.plugins.browser_object_api = (function () {
   let _migemo = liberator.hasExtension("XUL/Migemo");
+  let _identify = function (i) {try{return i.linkedBrowser.contentDocument.location.host}catch(e){}};
 
   let Selectors = { // {{{
     // @http://piro.sakura.ne.jp/latest/blosxom/mozilla/xul/2009-01-24_tab.htm
@@ -15,31 +16,24 @@ liberator.plugins.browser_object_api = (function () {
       current: function ()
         [gBrowser.mCurrentTab],
 
-      all: function () {
-        let ary = Selectors.collection;
-        return [ary[i] for (i in ary) if (i < ary.length)];
-      },
+      all: function ()
+        Selectors.collection,
 
-      left: function (scope) {
-        let ary = Support.toTabs(scope) || Selectors.collection;
-        return [ary[i] for (i in ary) if (ary[i]._tPos <= Selectors.active)].reverse();
-      },
+      left: function (scope)
+        let (ary = Support.toTabs(scope) || Selectors.collection, active = Selectors.active)
+          ary.filter(function (aTab) aTab._tPos <= active),
 
-      right: function (scope) {
-        let ary = Support.toTabs(scope) || Selectors.collection;
-        return [ary[i] for (i in ary) if (ary[i]._tPos >= Selectors.active)];
-      },
+      right: function (scope)
+        let (ary = Support.toTabs(scope) || Selectors.collection, active = Selectors.active)
+          ary.filter(function (aTab) aTab._tPos >= active),
 
-      other: function (scope) {
-        let ary = Support.toTabs(scope) || Selectors.collection;
-        return [ary[i] for (i in ary) if (ary[i]._tPos != Selectors.active)];
-      },
+      other: function (scope)
+        let (ary = Support.toTabs(scope) || Selectors.collection, active = Selectors.active)
+          ary.filter(function (aTab) aTab._tPos != active),
 
-      same: function (scope) {
-        let identify = function (i) {try{return i.linkedBrowser.contentDocument.location.host}catch(e){}};
-        let ary = Support.toTabs(scope) || Selectors.collection, activeIdentify = identify(gBrowser.mCurrentTab);
-        return [ary[i] for (i in ary) if (identify(ary[i]) == activeIdentify)];
-      },
+      same: function (scope)
+        let (ary = Support.toTabs(scope) || Selectors.collection, activeIdentify = _identify(gBrowser.mCurrentTab))
+          ary.filter(function (aTab) _identify(aTab) == activeIdentify),
     },
 
     // @http://piro.sakura.ne.jp/xul/_treestyletab.html#focused-folding-item(folding-item-api-20)
