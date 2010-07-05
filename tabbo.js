@@ -2,8 +2,8 @@
 // @http://code.google.com/p/vimperator-labs/source/browse/common/content/tabs.js#645
 (function(){
   if (liberator.plugins.browser_object_api) {
-    [[['tabb[o]'], ':tabdo + BrowserObject']].concat(
-      browser_object_api.options.map(function (scope) [[scope.slice(1, 3) + "[" + scope.slice(3) + "]"], ':tabbo ' + scope, scope])
+    [[["tabb[o]"], ":tabdo + BrowserObject"]].concat(
+      browser_object_api.options.map(function (scope) [[scope.slice(1, 3) + "[" + scope.slice(3) + "]"], ":tabbo " + scope, scope])
     ).forEach(function ([cmd, desc, scope]) {
       commands.addUserCommand(
         cmd, desc,
@@ -20,7 +20,7 @@
           else
           {
             let context = CompletionContext("");
-            context.title = ['Buffer','URL'];
+            context.title = ["Buffer","URL"];
             context.filters = [CompletionContext.Filter.textDescription];
             context.keys = {
               text: function (item) item._tPos + 1 + ": " + (item.label || "(Untitled)"),

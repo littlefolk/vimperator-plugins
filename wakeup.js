@@ -5,7 +5,7 @@
 (function(){
   if (liberator.plugins.browser_object_api) {
     commands.addUserCommand(
-      ['wak[eup]'], 'Wake up! Wake up! Wake up!',
+      ["wak[eup]"], "Wake up! Wake up! Wake up!",
       function (args)
       {
         let matches = (args.literalArg && args.literalArg.match(/^(\d+):?/));
