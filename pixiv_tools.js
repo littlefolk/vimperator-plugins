@@ -157,6 +157,8 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
               completer: function (context) {
                 context.completions = _getCompTags();
                 context.title.push((new Date(self.STORE.get("EXPIRE", 0))).toISOString());
+                let (skip = context.filter.match(/^.*,\s?/))
+                  skip && context.advance(skip[0].length);
               }
             }
           );
@@ -276,7 +278,7 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
         mode: "add",
         type: type,
         id: self.ID[type],
-        tag: tag || "",
+        tag: (tag && tag.replace(/,(\s+|\s?)/g, " ")) || "",
         restrict: (self.SETTING.ADD_PUBLIC[type]? "0": "1"),
         tt: self.ID.TT || "",
       })}
