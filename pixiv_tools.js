@@ -63,11 +63,13 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
     get bookmarkTags () {
       if (!this._bookmarkTags)
         _setBookmarkTags()
-      return this._bookmarkTags || {};
+      return this._bookmarkTags;
     },
 
     set bookmarkTags (data)
       this._bookmarkTags = data,
+
+    _getCompTagsCache: {},
 
     ID: {
       get illust () {
@@ -166,7 +168,7 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
             function (input) _postBookmark("illust", input),
             {
               completer: function (context) {
-                context.completions = _getCompTags();
+                context.completions = _getCompleteTags(self.ID.illust, self.GET.imgTags);
                 context.title.push((new Date(self.STORE.get("EXPIRE", 0))).toISOString());
                 let (skip = context.filter.match(/^.*,\s?/))
                   skip && context.advance(skip[0].length);
@@ -256,25 +258,31 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
     };
   };
 
-  let _getCompTags = function ()
+  let _getCompleteTags = function (_imgID, _imgTags)
   {
-    let _dict = {};
-    let _store = self.bookmarkTags;
-    let _imgtags = self.GET.ImgTags;
-    _dict["sep"] = [["", ""]];
-    _dict["both"] = _imgtags.filter(function (t) _store[t]).map(function (t) [t, _store[t] + " + " + self.ECHO_MESSAGE["reqtag"]]);
-    _dict["illust-full"] = _imgtags.map(function (s) [s, self.ECHO_MESSAGE["reqtag"]]);
-    _dict["bookmark-full"] = [[k, _store[k]] for (k in _store)];
-    let (_c = util.Array.toObject(_dict["both"]))
+    let store = self.bookmarkTags;
+    let key = _imgID || "_";
+    if (!self._getCompTagsCache[key] && store)
     {
-      _dict["illust"] = _dict["illust-full"].filter(function ([t, d]) !_c[t]);
-      _dict["bookmark"] = _dict["bookmark-full"].filter(function ([t, d]) !_c[t]);
+      let _dict = {};
+      _dict["sep"] = [["", ""]];
+      _dict["both"] = imgtags.filter(function (t) store[t]).map(function (t) [t, store[t] + " + " + self.ECHO_MESSAGE["reqtag"]]);
+      _dict["illust-full"] = imgtags.map(function (s) [s, self.ECHO_MESSAGE["reqtag"]]);
+      _dict["bookmark-full"] = [[k, store[k]] for (k in store)];
+      let (both = util.Array.toObject(_dict["both"]))
+      {
+        _dict["illust"] = _dict["illust-full"].filter(function ([t, d]) !both[t]);
+        _dict["bookmark"] = _dict["bookmark-full"].filter(function ([t, d]) !both[t]);
+      };
+      self._getCompTagsCache[key] = _compTagsSort(self.SETTING.COMPLETION.tag || ["illust-full", "bookmark-full"], _dict).map(function ([t, d]) [t + ",", d]);
     };
-    let sortFunc = (self.SETTING.COMPLETION.sort)?
-      let (_calc = function ([t, d]) (d == self.ECHO_MESSAGE["reqtag"])? t: d.match(/\d+/g).map(parseFloat).reduce(function (a, b) a + b))
-        function (arr) arr.sort(function (a, b) CompletionContext.Sort.number(_calc(a), _calc(b))):
-      util.identity;
-    return util.Array.flatten((self.SETTING.COMPLETION.tag || ["illust-full", "bookmark-full"]).map(function (key) sortFunc(_dict[key] || [])));
+    return self._getCompTagsCache[key];
+  };
+  let _compTagsSort = function (keys, dict)
+  {
+    let _calc = function ([t, d]) (d == self.ECHO_MESSAGE["reqtag"])? t: d.match(/\d+/g).map(parseFloat).reduce(function (a, b) a + b);
+    let _sort = (self.SETTING.COMPLETION.sort)? function (arr) arr.sort(function (a, b) CompletionContext.Sort.number(_calc(a), _calc(b))): util.identity;
+    return util.Array.flatten(keys.map(function (key) _sort(dict[key] || [])));
   };
 
   let _postBookmark = function (type, tag, limit)
@@ -406,7 +414,7 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
     add("ToggleI[llust]" , self.FUNC.toggleIllust);
     add("ToggleC[omment]", function () window.content.wrappedJSObject.one_comment_view());
     add("Post[Tombloo]"  , self.FUNC.postTombloo);
-    add("U[pdate]"       , function () _getBookmarkTags(true) && _getTT());
+    add("U[pdate]"       , function () _setBookmarkTags(true) && _getTT() && (self._getCompTagsCache = {}));
   };
   addCommands();
 
