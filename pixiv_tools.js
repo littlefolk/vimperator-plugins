@@ -15,20 +15,20 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
   let $LX = function (a, b) libly.$U.getFirstNodeFromXPath(a, b);
   let $LXs = function (a, b) libly.$U.getNodesFromXPath(a, b);
   let toQuery = function (so) [encodeURIComponent(i) + "=" + encodeURIComponent(so[i]) for (i in so)].join("&");
-  let checkInput = function (input) input && /^y(es)?/i.test(input);
+  let checkInput = function (input) commandline.close() || (input && /^y(es)?/i.test(input));
 
   // }}}
   // Public {{{
   let self = {
-    SETTING: {
-      EXPIRE: 60 * 60 * 24 * 1000,
+    setting: {
+      expire: 60 * 60 * 24 * 1000,
 
-      ADD_PUBLIC: {
-        user   : true,
-        illust : false,
+      addPublic: {
+        user: true,
+        illust: false,
       },
 
-      COMPLETION: {
+      completion: {
         // CompletionTags Show
         //   "both"          : Bookmark && Illust
         //   "illust"        : Illust - Bookmark
@@ -42,36 +42,21 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
       },
     },
 
-    STORE: storage.newMap("pixiv_tools", {store: true}),
+    message: {
+      page: {
+        success: "\u8ffd\u52a0\u3057\u307e\u3057\u305f", // # 追加しました
+        bookmark: "\u3042\u306a\u305f\u306e\u30d6\u30c3\u30af\u30de\u30fc\u30af", // # あなたのブックマーク
+        toppage: "\u307f\u3093\u306a\u306e\u65b0\u7740\u30a4\u30e9\u30b9\u30c8", // # みんなの新着イラスト
+      },
 
-    PAGE_MESSAGE: {
-      success    : "\u8ffd\u52a0\u3057\u307e\u3057\u305f",                         // # 追加しました
-      bookmark   : "\u3042\u306a\u305f\u306e\u30d6\u30c3\u30af\u30de\u30fc\u30af", // # あなたのブックマーク
-      toppage    : "\u307f\u3093\u306a\u306e\u65b0\u7740\u30a4\u30e9\u30b9\u30c8", // # みんなの新着イラスト
+      echo: {
+        add: "\u304a\u6c17\u306b\u5165\u308a\u306b\u8ffd\u52a0\u3057\u307e\u3057\u305f", // # お気に入りに追加しました
+        error: "\u5931\u6557\u3057\u307e\u3057\u305f", // # 失敗しました
+        reqtag: "\u767b\u9332\u30bf\u30b0", // # 登録タグ
+      },
     },
 
-    ECHO_MESSAGE: {
-      add   : "\u304a\u6c17\u306b\u5165\u308a\u306b\u8ffd\u52a0\u3057\u307e\u3057\u305f", // # お気に入りに追加しました
-      error : "\u5931\u6557\u3057\u307e\u3057\u305f",                                     // # 失敗しました
-      reqtag: "\u767b\u9332\u30bf\u30b0",                                                 // # 登録タグ
-    },
-
-    TomblooService: Cc["@brasil.to/tombloo-service;1"].getService().wrappedJSObject.Tombloo.Service,
-
-    _bookmarkTags: null,
-
-    get bookmarkTags () {
-      if (!this._bookmarkTags)
-        _setBookmarkTags()
-      return this._bookmarkTags;
-    },
-
-    set bookmarkTags (data)
-      this._bookmarkTags = data,
-
-    _getCompTagsCache: {},
-
-    ID: {
+    id: {
       get illust () {
         let id = let (e = $("rpc_i_id") || $LX("//input[@name='illust_id']")) e && (e.textContent || e.value);
         liberator.assert(id, "Illust ID does not exist");
@@ -84,36 +69,34 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
         return id;
       },
 
-      _TT: "",
-
       get TT ()
-        let (e = $LX("//input[@name='tt']")) e && e.value || this._TT,
+        let (e = $LX("//input[@name='tt']")) e && e.value || self.cache.TT,
 
-      set TT (s)
-        this._TT = s,
+      set TT (str)
+        self.cache.TT = str,
     },
 
-    GET: {
-      get Content ()
+    get: {
+      get content ()
         $("content2"),
 
-      get MiddleImage ()
+      get middleImage ()
         $LX("id('content2')/div/a/img"),
 
-      get MangaViewer ()
+      get mangaViewer ()
         $LX("id('content2')/div/a[contains(@href, 'mode=manga')]"),
 
-      get BigImage ()
+      get bigImage ()
         $("BigImage"),
 
-      get ImgTags ()
+      get imgTags ()
         $LXs("id('tags')/a[not(img)]").map(function (e) e.text),
 
-      get vicinityImage ()
+      get vicinityImages ()
         [null].concat($LXs("id('content2')/div/a[contains(@href, 'medium&illust_id=')]")).slice(-2),
     },
 
-    CHECK: {
+    check: {
       get currentLocation ()
         window.content.document.location.href,
 
@@ -139,11 +122,36 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
         !$LX("id('leftcolumn')/div/ul[@class='profile_bt']/li/a[contains(@href, 'bookmark_add')]"),
     },
 
-    FUNC: {
+    store: storage.newMap("pixiv_tools", {store: true}),
+
+    data: {
+      get bookmarkTags () {
+        if (!self.cache.bookmarkTags)
+          _setBookmarkTags();
+        return self.cache.bookmarkTags;
+      },
+
+      set bookmarkTags (obj)
+        self.cache.bookmarkTags = obj,
+
+      get completeTags ()
+        self.cache.completeTags,
+
+      set completeTags (obj)
+        self.cache.completeTags = obj,
+    },
+
+    cache: {
+      bookmarkTags: null,
+      completeTags: {},
+      TT: "",
+    },
+
+    func: {
       toggleIllust: function () {
-        liberator.assert(self.CHECK.inIllust, "This Page is not Illust Page");
-        let BigImage = self.GET.BigImage;
-        let MangaViewer = self.GET.MangaViewer;
+        liberator.assert(self.check.inIllust, "This Page is not Illust Page");
+        let BigImage = self.get.bigImage;
+        let MangaViewer = self.get.mangaViewer;
         if (BigImage)
           BigImage.style.display = ((BigImage.style.display == "none")? "": "none");
         else if (!BigImage && MangaViewer)
@@ -153,23 +161,23 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
       },
 
       postBookmark: function (_addUserFlag) {
-        if (self.CHECK.inFront || self.CHECK.inList || _addUserFlag)
+        if (self.check.inFront || self.check.inList || _addUserFlag)
         {
-          liberator.assert(!self.CHECK.isFavUser, "This User is Bookmarked");
+          liberator.assert(!self.check.isFavUser, "This User is Bookmarked");
           commandline.input(
             "Add User Bookmark? [Y/n]: ",
             function (input) checkInput(input) && _postBookmark("user")
           );
         }
-        else if (self.CHECK.inIllust)
+        else if (self.check.inIllust)
         {
           commandline.input(
-            (self.CHECK.isFavIllust? "Update": "Add") + " Illust Bookmark [Tags]: ",
-            function (input) _postBookmark("illust", input),
+            (self.check.isFavIllust? "Update": "Add") + " Illust Bookmark [Tags]: ",
+            function (input) checkInput("y") && _postBookmark("illust", input),
             {
               completer: function (context) {
-                context.completions = _getCompleteTags(self.ID.illust, self.GET.imgTags).filter(function ([t,d]) !~context.filter.indexOf(t));
-                context.title.push((new Date(self.STORE.get("EXPIRE", 0))).toISOString());
+                context.completions = _getCompleteTags(self.id.illust, self.get.imgTags).filter(function ([t, d]) !~context.filter.indexOf(t));
+                context.title.push((new Date(self.store.get("time", 0))).toISOString());
                 let (skip = context.filter.match(/^.*,\s?/))
                   skip && context.advance(skip[0].length);
               }
@@ -181,7 +189,7 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
       },
 
       postTombloo: function () {
-        liberator.assert(self.CHECK.inIllust, "This Page is not Illust Page");
+        liberator.assert(self.check.inIllust, "This Page is not Illust Page");
         commandline.input(
           "Post Tombloo? [Y/n]: ",
           function (input) checkInput(input) && _postTombloo()
@@ -189,6 +197,7 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
       },
     },
 
+    tomblooService: Cc["@brasil.to/tombloo-service;1"].getService().wrappedJSObject.Tombloo.Service,
   };
 
   // }}}
@@ -196,8 +205,8 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
   let _addBigImage = function (_tomblooFlag)
   {
     let Body = window.content.document.documentElement;
-    let Content = self.GET.Content;
-    let MiddleImage = self.GET.MiddleImage;
+    let Content = self.get.content;
+    let MiddleImage = self.get.middleImage;
     let BigImageElem = new Image();
     MiddleImage.setAttribute("style", "border: 1px ridge #B7B7B7;");
     BigImageElem.onload = function ()
@@ -210,7 +219,6 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
           x = let (drop = (x + BigImageElem.naturalWidth + 2) - Body.clientWidth) (drop > 0)? x - drop - 2: x;
           x = (x <= 0)? 0: x - 2;
       let y = MiddleImage.offsetTop + Content.offsetTop - 2;
-      
       BigImageElem.id = "BigImage";
       BigImageElem.setAttribute("style", "position: absolute; border : 3px ridge #B7B7B7; z-index : 999; opacity: 1; background-color : #fff;");
       BigImageElem.style.top = y + "px";
@@ -225,25 +233,25 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
 
   let _setBookmarkTags = function (_getFlag)
   {
-    let data = self.STORE.get("data", null);
+    let store = self.store.get("data", null);
     let now = new Date().getTime();
-    if (!data || _getFlag || ((now - self.STORE.get("EXPIRE", 0)) >= self.SETTING.EXPIRE))
+    if (!store || _getFlag || ((now - self.store.get("time", 0)) >= self.setting.expire))
     {
       let req = new libly.Request("http://www.pixiv.net/bookmark.php", {Referrer: "http://www.pixiv.net/"});
       req.addEventListener("onSuccess", function (res) {
         let tagList = res.getHTMLDocument("id('bookmark_list')/ul/li[@class!='level0']/a");
         if (tagList)
         {
-          let data = util.Array.toObject(tagList.map(function (e) [$LX("./text()", e).textContent, $LX("./span/text()", e).textContent]));
-          self.bookmarkTags = data;
-          self.STORE.set("data", data);
-          self.STORE.set("EXPIRE", now);
-          self.STORE.save();
+          let obj = util.Array.toObject(tagList.map(function (e) [$LX("./text()", e).textContent, $LX("./span/text()", e).textContent]));
+          self.data.bookmarkTags = obj;
+          self.store.set("data", obj);
+          self.store.set("time", now);
+          self.store.save();
           Logger.log("_setBookmarkTags.Success(" + tagList.length + ")");
         }
         else
         {
-          self.STORE.remove();
+          self.data.bookmarkTags = store;
           Logger.echoerr("_setBookmarkTags.Error(" + res.req.body + ")");
         };
       });
@@ -254,58 +262,57 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
     else
     {
       Logger.log("_setBookmarkTags.Cache");
-      self.bookmarkTags = data;
+      self.data.bookmarkTags = store;
     };
   };
 
   let _getCompleteTags = function (_imgID, _imgTags)
   {
-    let store = self.bookmarkTags;
+    let bookmarkTags = self.data.bookmarkTags;
     let key = _imgID || "_";
-    if (!self._getCompTagsCache[key] && store)
+    if (!self.data.completeTags[key] && bookmarkTags)
     {
       let _dict = {};
       _dict["sep"] = [["", ""]];
-      _dict["both"] = imgtags.filter(function (t) store[t]).map(function (t) [t, store[t] + " + " + self.ECHO_MESSAGE["reqtag"]]);
-      _dict["illust-full"] = imgtags.map(function (s) [s, self.ECHO_MESSAGE["reqtag"]]);
-      _dict["bookmark-full"] = [[k, store[k]] for (k in store)];
+      _dict["both"] = _imgTags.filter(function (t) bookmarkTags[t]).map(function (t) [t, bookmarkTags[t] + " + " + self.message.echo["reqtag"]]);
+      _dict["illust-full"] = _imgTags.map(function (s) [s, self.message.echo["reqtag"]]);
+      _dict["bookmark-full"] = [[k, bookmarkTags[k]] for (k in bookmarkTags)];
       let (both = util.Array.toObject(_dict["both"]))
       {
         _dict["illust"] = _dict["illust-full"].filter(function ([t, d]) !both[t]);
         _dict["bookmark"] = _dict["bookmark-full"].filter(function ([t, d]) !both[t]);
       };
-      self._getCompTagsCache[key] = _compTagsSort(self.SETTING.COMPLETION.tag || ["illust-full", "bookmark-full"], _dict).map(function ([t, d]) [t + ",", d]);
+      self.data.completeTags[key] = _sortCompleteTags(self.setting.completion.tag || ["illust-full", "bookmark-full"], _dict).map(function ([t, d]) [t + ",", d]);
     };
-    return self._getCompTagsCache[key];
+    return self.data.completeTags[key];
   };
-  let _compTagsSort = function (keys, dict)
+  let _sortCompleteTags = function (keys, dict)
   {
-    let _calc = function ([t, d]) (d == self.ECHO_MESSAGE["reqtag"])? t: d.match(/\d+/g).map(parseFloat).reduce(function (a, b) a + b);
-    let _sort = (self.SETTING.COMPLETION.sort)? function (arr) arr.sort(function (a, b) CompletionContext.Sort.number(_calc(a), _calc(b))): util.identity;
+    let _calc = function ([t, d]) (d == self.message.echo["reqtag"])? t: d.match(/\d+/g).map(parseFloat).reduce(function (a, b) a + b);
+    let _sort = (self.setting.completion.sort)? function (arr) arr.sort(function (a, b) CompletionContext.Sort.number(_calc(a), _calc(b))): util.identity;
     return util.Array.flatten(keys.map(function (key) _sort(dict[key] || [])));
   };
 
-  let _postBookmark = function (type, tag, limit)
+  let _postBookmark = function (_type, _tag, _limit)
   {
-    commandline.close();
-    liberator.assert(!(limit && limit > 3), "Accessed Limit");
-    
+    liberator.assert(!(_limit && _limit > 3), "Accessed Limit");
+    _tag = (_tag && _tag.replace(/,(\s+|\s?)/g, " ").replace(/\s+$/, "")) || "";
     let req = new libly.Request(
       "http://www.pixiv.net/bookmark_add.php",
       {Referrer: liberator.modules.buffer.URL},
       {postBody: toQuery({
         mode: "add",
-        type: type,
-        id: self.ID[type],
-        tag: (tag && tag.replace(/,(\s+|\s?)/g, " ")) || "",
-        restrict: (self.SETTING.ADD_PUBLIC[type]? "0": "1"),
-        tt: self.ID.TT || "",
+        type: _type,
+        id: self.id[_type],
+        tag: _tag,
+        restrict: (self.setting.addPublic[_type]? "0": "1"),
+        tt: self.id.TT,
       })}
     );
     req.addEventListener("onSuccess", function (res) {
-      let _limit = limit || 0;
-      let status = [type, self.ID[type], tag, limit].join(", ");
-      let responseIs = function (text) [message for (message in self.PAGE_MESSAGE) if (~text.indexOf(self.PAGE_MESSAGE[message]))][0];
+      let limit = _limit || 0;
+      let status = [_type, self.id[_type], _tag, _limit].join(", ");
+      let responseIs = function (text) [message for (message in self.message.page) if (~text.indexOf(self.message.page[message]))][0];
       switch (responseIs(res.responseText)) {
         case "success":
           Logger.log("_postBookmark.Success(" + status + ")");
@@ -315,13 +322,13 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
           break;
         case "toppage":
           Logger.log("_postBookmark.SessionOut(" + status + ")");
-          _postBookmark(type, tag, ++_limit);
+          _postBookmark(_type, _tag, ++limit);
           break;
         default:
-          if (!self.ID.TT)
+          if (!self.id.TT)
           {
             Logger.log("_postBookmark.MoreTry(" + status + res.req.body + ")");
-            _getTT(function () _postBookmark(type, tag, ++_limit));
+            _setTT(function () _postBookmark(_type, _tag, ++limit));
           }
           else
             Logger.echoerr("_postBookmark.Error(" + status + res.req.body + ")");
@@ -335,8 +342,6 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
 
   let _postTombloo = function ()
   {
-    commandline.close();
-    
     let getContext = function (elem)
     {
       let doc = window.content.document;
@@ -353,35 +358,32 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
       return context;
     };
     let ctx = getContext(
-      self.GET.BigImage || (self.GET.MangaViewer && $LX("img", self.GET.MangaViewer).src.replace("_m.", "_p0.")) || _addBigImage(true)
+      self.get.bigImage || (self.get.mangaViewer && $LX("img", self.get.mangaViewer).src.replace("_m.", "_p0.")) || _addBigImage(true)
     );
-    let ext = self.TomblooService.check(ctx)[0];
-    self.TomblooService.share(ctx, ext, !/^Photo/.test(ext.name)).addCallback(function ()
-      Logger.log("_postTombloo.Success(" + ext.name + ": " + self.ID.illust + ")")
+    let ext = self.tomblooService.check(ctx)[0];
+    self.tomblooService.share(ctx, ext, !/^Photo/.test(ext.name)).addCallback(function ()
+      Logger.log("_postTombloo.Success(" + ctx.href + ")")
     ).addErrback(function (err)
       Logger.log("_postTombloo.Error(" + err + ")")
     );
   };
 
-  let _getTT = function (callback) {
-    let req = new libly.Request(
-      "http://www.pixiv.net/mypage.php",
-        {Referrer: "http://www.pixiv.net/"}
-    );
+  let _setTT = function (_callback) {
+    let req = new libly.Request("http://www.pixiv.net/mypage.php", {Referrer: "http://www.pixiv.net/"});
     req.addEventListener("onSuccess", function (res) {
       let e = res.getHTMLDocument("//input[@name='tt']");
       if (e && e[0])
       {
-        self.ID.TT = e[0].value;
-        Logger.log("_getTT.Success(" + self.ID.TT + ")");
-        if (callback && typeof callback == 'function')
-          callback.call(this);
+        self.id.TT = e[0].value;
+        Logger.log("_setTT.Success(" + self.id.TT + ")");
+        if (_callback && typeof _callback == 'function')
+          _callback.call(this);
       }
       else
-        Logger.log("_getTT.Error(" + res.req.body + ")");
+        Logger.log("_setTT.Error(" + res.req.body + ")");
     });
-    req.addEventListener("onFailure",   function (res) Logger.echoerr("_getTT.Failure"  ));
-    req.addEventListener("onException", function (res) Logger.echoerr("_getTT.Exception"));
+    req.addEventListener("onFailure",   function (res) Logger.echoerr("_setTT.Failure"  ));
+    req.addEventListener("onException", function (res) Logger.echoerr("_setTT.Exception"));
     req.get();
   };
 
@@ -391,30 +393,29 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
   {
     let add = function (_name, _lambda, _option)
       commands.addUserCommand(["Pixiv" + _name], _name.replace(/\W/g, "").replace(/\B[A-Z]/g, " $&"), _lambda, _option || {}, true);
-    
     [
-      ["UserFr[ont]"      , function () "http://www.pixiv.net/member.php?id=" + self.ID.user],
-      ["UserL[ist]"       , function () "http://www.pixiv.net/member_illust.php?id=" + self.ID.user],
-      ["UserBb[s]"        , function () "http://www.pixiv.net/member_board.php?id=" + self.ID.user],
-      ["UserBo[okmark]"   , function () "http://www.pixiv.net/bookmark.php?id=" + self.ID.user],
-      ["UserI[llustTag]"  , function () "http://www.pixiv.net/member_tag_all.php?id=" + self.ID.user],
-      ["UserR[esponse]"   , function () "http://www.pixiv.net/response.php?mode=all&id=" + self.ID.user],
-      ["UserM[yPic]"      , function () "http://www.pixiv.net/mypixiv_all.php?id=" + self.ID.user],
-      ["UserFa[vUser]"    , function () "http://www.pixiv.net/bookmark.php?type=user&id=" + self.ID.user],
-      ["Illust"           , function () "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + self.ID.illust],
-      ["IllustB[ookmark]" , function () "http://www.pixiv.net/bookmark_illust_user.php?illust_id=" + self.ID.illust],
-      ["IllustP[rev]"     , function () self.GET.vicinityImage[1].href],
-      ["IllustN[ext]"     , function () self.GET.vicinityImage[0].href],
+      ["UserFr[ont]"      , function () "http://www.pixiv.net/member.php?id=" + self.id.user],
+      ["UserL[ist]"       , function () "http://www.pixiv.net/member_illust.php?id=" + self.id.user],
+      ["UserBb[s]"        , function () "http://www.pixiv.net/member_board.php?id=" + self.id.user],
+      ["UserBo[okmark]"   , function () "http://www.pixiv.net/bookmark.php?id=" + self.id.user],
+      ["UserI[llustTag]"  , function () "http://www.pixiv.net/member_tag_all.php?id=" + self.id.user],
+      ["UserR[esponse]"   , function () "http://www.pixiv.net/response.php?mode=all&id=" + self.id.user],
+      ["UserM[yPic]"      , function () "http://www.pixiv.net/mypixiv_all.php?id=" + self.id.user],
+      ["UserFa[vUser]"    , function () "http://www.pixiv.net/bookmark.php?type=user&id=" + self.id.user],
+      ["Illust"           , function () "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + self.id.illust],
+      ["IllustB[ookmark]" , function () "http://www.pixiv.net/bookmark_illust_user.php?illust_id=" + self.id.illust],
+      ["IllustP[rev]"     , function () self.get.vicinityImages[1].href],
+      ["IllustN[ext]"     , function () self.get.vicinityImages[0].href],
     ].forEach(function ([_name, _url])
       add("Cd" + _name, function (args) liberator.open(_url(), args.bang? liberator.NEW_TAB: liberator.CURRENT_TAB), {bang: true})
     );
-    add("FavA[uto]"      , function () self.FUNC.postBookmark());
-    add("FavI[llust]"    , function () self.FUNC.postBookmark(false));
-    add("FavU[ser]"      , function () self.FUNC.postBookmark(true));
-    add("ToggleI[llust]" , self.FUNC.toggleIllust);
+    add("FavA[uto]"      , function () self.func.postBookmark());
+    add("FavI[llust]"    , function () self.func.postBookmark(false));
+    add("FavU[ser]"      , function () self.func.postBookmark(true));
+    add("ToggleI[llust]" , self.func.toggleIllust);
     add("ToggleC[omment]", function () window.content.wrappedJSObject.one_comment_view());
-    add("Post[Tombloo]"  , self.FUNC.postTombloo);
-    add("U[pdate]"       , function () _setBookmarkTags(true) && _getTT() && (self._getCompTagsCache = {}));
+    add("Post[Tombloo]"  , self.func.postTombloo);
+    add("U[pdate]"       , function () _setBookmarkTags(true) && _setTT() && (self.data.completeTags = {}));
   };
   addCommands();
 
