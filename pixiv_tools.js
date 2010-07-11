@@ -58,6 +58,17 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
 
     TomblooService: Cc["@brasil.to/tombloo-service;1"].getService().wrappedJSObject.Tombloo.Service,
 
+    _bookmarkTags: null,
+
+    get bookmarkTags () {
+      if (!this._bookmarkTags)
+        _setBookmarkTags()
+      return this._bookmarkTags || {};
+    },
+
+    set bookmarkTags (data)
+      this._bookmarkTags = data,
+
     ID: {
       get illust () {
         let id = let (e = $("rpc_i_id") || $LX("//input[@name='illust_id']")) e && (e.textContent || e.value);
@@ -210,45 +221,45 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
     return BigImageElem;
   };
 
-  let _getBookmarkTags = function (_getFlag)
+  let _setBookmarkTags = function (_getFlag)
   {
     let data = self.STORE.get("data", null);
     let now = new Date().getTime();
     if (!data || _getFlag || ((now - self.STORE.get("EXPIRE", 0)) >= self.SETTING.EXPIRE))
     {
-      let req = new libly.Request(
-        "http://www.pixiv.net/bookmark.php",
-        {Referrer: "http://www.pixiv.net/"}
-      );
+      let req = new libly.Request("http://www.pixiv.net/bookmark.php", {Referrer: "http://www.pixiv.net/"});
       req.addEventListener("onSuccess", function (res) {
-        let tagList = res.getHTMLDocument("id('bookmark_list')/ul/li[@class!='level0']/a")
+        let tagList = res.getHTMLDocument("id('bookmark_list')/ul/li[@class!='level0']/a");
         if (tagList)
         {
-          let obj = {};
-          tagList.forEach(function (e) obj[$LX("./text()", e).textContent] = $LX("./span/text()", e).textContent)
-          self.STORE.set("data", obj);
+          let data = util.Array.toObject(tagList.map(function (e) [$LX("./text()", e).textContent, $LX("./span/text()", e).textContent]));
+          self.bookmarkTags = data;
+          self.STORE.set("data", data);
           self.STORE.set("EXPIRE", now);
           self.STORE.save();
-          Logger.log("_getBookmarkTags.Success(" + tagList.length + ")");
+          Logger.log("_setBookmarkTags.Success(" + tagList.length + ")");
         }
         else
         {
           self.STORE.remove();
-          Logger.echoerr("_getBookmarkTags.Error(" + res.req.body + ")");
+          Logger.echoerr("_setBookmarkTags.Error(" + res.req.body + ")");
         };
       });
-      req.addEventListener("onFailure",   function (res) Logger.echoerr("_getBookmarkTags.Failure"  ));
-      req.addEventListener("onException", function (res) Logger.echoerr("_getBookmarkTags.Exception"));
+      req.addEventListener("onFailure",   function (res) Logger.echoerr("_setBookmarkTags.Failure"  ));
+      req.addEventListener("onException", function (res) Logger.echoerr("_setBookmarkTags.Exception"));
       req.get();
     }
     else
-      return data || {};
+    {
+      Logger.log("_setBookmarkTags.Cache");
+      self.bookmarkTags = data;
+    };
   };
 
   let _getCompTags = function ()
   {
     let _dict = {};
-    let _store = util.cloneObject(_getBookmarkTags());
+    let _store = self.bookmarkTags;
     let _imgtags = self.GET.ImgTags;
     _dict["sep"] = [["", ""]];
     _dict["both"] = _imgtags.filter(function (t) _store[t]).map(function (t) [t, _store[t] + " + " + self.ECHO_MESSAGE["reqtag"]]);
