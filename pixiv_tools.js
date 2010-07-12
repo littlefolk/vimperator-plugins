@@ -168,7 +168,7 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
             function (input) _postBookmark("illust", input),
             {
               completer: function (context) {
-                context.completions = _getCompleteTags(self.ID.illust, self.GET.imgTags);
+                context.completions = _getCompleteTags(self.ID.illust, self.GET.imgTags).filter(function ([t,d]) !~context.filter.indexOf(t));
                 context.title.push((new Date(self.STORE.get("EXPIRE", 0))).toISOString());
                 let (skip = context.filter.match(/^.*,\s?/))
                   skip && context.advance(skip[0].length);
