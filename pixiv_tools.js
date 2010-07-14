@@ -176,9 +176,14 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
             function (input) checkInput("y") && _postBookmark("illust", input),
             {
               completer: function (context) {
-                context.completions = _getCompleteTags(self.id.illust, self.get.imgTags).filter(function ([t, d]) !~context.filter.indexOf(t));
+                if (context.filter)
+                {
+                  let resep = RegExp("^(" + context.filter.replace(/^\s+|\s+$/, "").split(/\s+/).join("|") + ")$", "i");
+                  context.filters = [CompletionContext.Filter.text, function(item) !resep.test(item.text)];
+                };
+                context.completions = _getCompleteTags(self.id.illust, self.get.imgTags);
                 context.title.push((new Date(self.store.get("time", 0))).toISOString());
-                let (skip = context.filter.match(/^.*,\s?/))
+                let (skip = context.filter.match(/^.*\s+/))
                   skip && context.advance(skip[0].length);
               }
             }
@@ -282,7 +287,7 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
         _dict["illust"] = _dict["illust-full"].filter(function ([t, d]) !both[t]);
         _dict["bookmark"] = _dict["bookmark-full"].filter(function ([t, d]) !both[t]);
       };
-      self.data.completeTags[key] = _sortCompleteTags(self.setting.completion.tag || ["illust-full", "bookmark-full"], _dict).map(function ([t, d]) [t + ",", d]);
+      self.data.completeTags[key] = _sortCompleteTags(self.setting.completion.tag || ["illust-full", "bookmark-full"], _dict);
     };
     return self.data.completeTags[key];
   };
@@ -296,7 +301,7 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
   let _postBookmark = function (_type, _tag, _limit)
   {
     liberator.assert(!(_limit && _limit > 3), "Accessed Limit");
-    _tag = (_tag && _tag.replace(/,(\s+|\s?)/g, " ").replace(/\s+$/, "")) || "";
+    _tag = (_tag && _tag.replace(/,(\s+|\s?)/g, " ").replace(/^\s+|\s+$/, "")) || "";
     let req = new libly.Request(
       "http://www.pixiv.net/bookmark_add.php",
       {Referrer: liberator.modules.buffer.URL},
