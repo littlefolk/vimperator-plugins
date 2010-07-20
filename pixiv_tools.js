@@ -179,7 +179,7 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
                 if (context.filter)
                 {
                   let resep = RegExp("^(" + context.filter.replace(/^\s+|\s+$/, "").split(/\s+/).join("|") + ")$", "i");
-                  context.filters = [CompletionContext.Filter.text, function(item) !resep.test(item.text)];
+                  context.filters.push(function(item) !resep.test(item.text));
                 };
                 context.completions = _getCompleteTags(self.id.illust, self.get.imgTags);
                 context.title.push((new Date(self.store.get("time", 0))).toISOString());
