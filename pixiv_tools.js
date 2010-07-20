@@ -46,7 +46,9 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
       page: {
         success: "\u8ffd\u52a0\u3057\u307e\u3057\u305f", // # 追加しました
         bookmark: "\u3042\u306a\u305f\u306e\u30d6\u30c3\u30af\u30de\u30fc\u30af", // # あなたのブックマーク
-        toppage: "\u307f\u3093\u306a\u306e\u65b0\u7740\u30a4\u30e9\u30b9\u30c8", // # みんなの新着イラスト
+        toppage: "\u307f\u3093\u306a\u306e\u65b0\u7740\u4f5c\u54c1", // # みんなの新着作品
+        error: "\u30a8\u30e9\u30fc\u304c\u767a\u751f\u3057\u307e\u3057\u305f", // # エラーが発生しました
+
       },
 
       echo: {
@@ -325,6 +327,10 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
         case "toppage":
           Logger.log("_postBookmark.SessionOut(" + status + ")");
           _postBookmark(_type, _tag, ++limit);
+          break;
+        case "error":
+          tabs.reload(gBrowser.mCurrentTab);
+          Logger.echoerr("_postBookmark.Error(" + status + ")");
           break;
         default:
           if (!self.id.TT)
