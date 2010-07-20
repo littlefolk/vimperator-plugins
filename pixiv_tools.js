@@ -77,14 +77,11 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
     },
 
     get: {
-      get content ()
-        $("content2"),
-
       get middleImage ()
-        $LX("id('content2')/div/a/img"),
+        $LX("//div[@class='works_display']/a/img"),
 
       get mangaViewer ()
-        $LX("id('content2')/div/a[contains(@href, 'mode=manga')]"),
+        $LX("//div[@class='works_display']/a[contains(@href, 'mode=manga')]"),
 
       get bigImage ()
         $("BigImage"),
@@ -93,7 +90,7 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
         $LXs("id('tags')/a[not(img)]").map(function (e) e.text),
 
       get vicinityImages ()
-        [null].concat($LXs("id('content2')/div/a[contains(@href, 'medium&illust_id=')]")).slice(-2),
+        [null].concat($LXs("//div[@class='centeredNavi']/ul/li/a[contains(@href, 'medium&illust_id=')]")).slice(-2),
     },
 
     check: {
@@ -210,7 +207,6 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
   let _addBigImage = function (_tomblooFlag)
   {
     let Body = window.content.document.documentElement;
-    let Content = self.get.content;
     let MiddleImage = self.get.middleImage;
     let BigImageElem = new Image();
     MiddleImage.setAttribute("style", "border: 1px ridge #B7B7B7;");
@@ -220,10 +216,10 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
       //      大画像が画面右にはみ出したら、はみ出た分だけ左に寄せて、
       //      大画像が画面左にはみ出したら、左端から始める。
       // y: 中画像の上辺
-      let x = (MiddleImage.offsetLeft + Content.offsetLeft) + (MiddleImage.width / 2) - (BigImageElem.naturalWidth / 2);
+      let x = (MiddleImage.offsetLeft + MiddleImage.width / 2) - (BigImageElem.naturalWidth / 2);
           x = let (drop = (x + BigImageElem.naturalWidth + 2) - Body.clientWidth) (drop > 0)? x - drop - 2: x;
           x = (x <= 0)? 0: x - 2;
-      let y = MiddleImage.offsetTop + Content.offsetTop - 2;
+      let y = MiddleImage.offsetTop - 2;
       BigImageElem.id = "BigImage";
       BigImageElem.setAttribute("style", "position: absolute; border : 3px ridge #B7B7B7; z-index : 999; opacity: 1; background-color : #fff;");
       BigImageElem.style.top = y + "px";
