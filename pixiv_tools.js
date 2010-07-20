@@ -64,7 +64,8 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
       },
 
       get user () {
-        let id = let (e = $("rpc_u_id") || $LX("//div[@id='profile']/div/a")) e && (e.textContent || e.getAttribute("href").replace(/^.*id=/, ""));
+        let id = let (e = $("rpc_u_id") || $("mod_user") || $LX("//div[@class='profile_area']/a"))
+                   e && (e.textContent || e.getAttribute("href").replace(/^.*id=/, ""));
         liberator.assert(id, "User ID does not exist");
         return id;
       },
@@ -404,7 +405,7 @@ liberator.plugins.pixiv_tools = (function(){ //{{{
       ["UserM[yPic]"      , function () "http://www.pixiv.net/mypixiv_all.php?id=" + self.id.user],
       ["UserFa[vUser]"    , function () "http://www.pixiv.net/bookmark.php?type=user&id=" + self.id.user],
       ["Illust"           , function () "http://www.pixiv.net/member_illust.php?mode=medium&illust_id=" + self.id.illust],
-      ["IllustB[ookmark]" , function () "http://www.pixiv.net/bookmark_illust_user.php?illust_id=" + self.id.illust],
+      ["IllustB[ookmark]" , function () "http://www.pixiv.net/bookmark_add.php?type=illust&illust_id=" + self.id.illust],
       ["IllustP[rev]"     , function () self.get.vicinityImages[1].href],
       ["IllustN[ext]"     , function () self.get.vicinityImages[0].href],
     ].forEach(function ([_name, _url])
