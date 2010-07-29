@@ -1,45 +1,80 @@
-// 次の未読タブへ移動 {{{
-(function(){
-  if (liberator.plugins.browser_object_api) {
-    let OPTION = {
-      // Countがタブの先端・終端を越える数だけ与えられた場合に、反対側に飛んで続けるか、端で止まるか。
-      loop: true,
-    };
-    let bo = liberator.plugins.browser_object_api.Selectors;
-    let ts = TreeStyleTabService;
-    let tap = function () (bo.BarTab.istap(gBrowser.mCurrentTab)? 0: 1);
-    let select = function (candidate, all, count, flag) {
-      let carryover = (OPTION.loop)?
-        function (all, remnant, count) {
-          let i = ((count && (count % all.length) - remnant.length) || 0);
-          return (((i < 0) && i + all.length) || i);
-        }:
-        function (all, remnant) (remnant.length == 1)? 0: all.length - 1;
-      tabs.select(
-        (
-          candidate[parseInt((flag && ts.getParentTab(gBrowser.mCurrentTab) && ((count && count - 1) || "0")) || (count || tap()))] || 
-          all[carryover(all, candidate, count)]
-        )._tPos
-      );
-    };
+/**
+ * move_loaded_tab.js
+ *     Bartabで読み込まれているタブだけで「次のタブ」「前のタブ」をするplugin
+ *
+ * map
+ *     [count] gj
+ *         読み込まれているタブだけで「次のタブ」
+ *     [count] gk
+ *         読み込まれているタブだけで「前のタブ」
+ *     [count] gJ
+ *         読み込まれている親タブだけで「前のタブ」
+ *     [count] gK
+ *         読み込まれている親タブだけで「前のタブ」
+ *
+ * requires
+ *     [BarTab](https://addons.mozilla.org/ja/firefox/addon/67651/)
+ *     [Tree Style Tab](http://piro.sakura.ne.jp/xul/_treestyletab.html)
+ *     [browser_object_api.js](http://github.com/littlefolk/vimperator-plugins/blob/master/browser_object_api.js)
+ */
 
-    [
-      [
-        ['gj', 'sj'], 'Go to the next tab *loaded*.',
-        function (count) select(bo.BarTab.loaded("-right"), bo.BarTab.loaded(), count),
-      ], [
-        ['gk', 'sk'], 'Go to the previous tab *loaded*.',
-        function (count) select(bo.BarTab.loaded("-left").reverse(), bo.BarTab.loaded().reverse(), count),
-      ], [
-        ['gJ', 'sJ'], 'Go to the next *root* tab *loaded*.',
-        function (count) select(bo.Base.right(bo.BarTab.loaded(ts.rootTabs)), bo.BarTab.loaded(ts.rootTabs), count, true),
-      ], [
-        ['gK', 'sK'], 'Go to the previous *root* tab *loaded*.',
-        function (count) select(bo.Base.left(bo.BarTab.loaded(ts.rootTabs)).reverse(), bo.BarTab.loaded(ts.rootTabs).reverse(), count, true),
-      ],
-    ].forEach(function ([keys, description, action]) mappings.addUserMap([modes.NORMAL], keys, description, action, {count: true}));
-  };
-})();
+(function(){ // {{{1
+    if (liberator.plugins.browser_object_api) {
+        // base {{{2
+        const SELECTORS = liberator.plugins.browser_object_api.Selectors;
+        const TREESTYLE = TreeStyleTabService;
+        let OPTION = {
+            // Countがタブの先端・終端を越える数だけ与えられた場合に、反対側に飛んで続けるか、端で止まるか。
+            loop: true,
+        };
 
-// }}}
-// vim: sw=2 ts=2 et si fdm=marker:
+        // function {{{2
+        let tap = function () (SELECTORS.BarTab.istap(gBrowser.mCurrentTab)? 0: 1);
+        let select = function (candidate, all, count, flag) {
+            let carryover =
+                (OPTION.loop)?
+                    function _loopTab (all, remnant, count)
+                        let (i = ((count && (count % all.length) - remnant.length) || 0))
+                            (((i < 0) && i + all.length) || i):
+                    function _lastTab (all, remnant)
+                            (remnant.length == 1)? 0: all.length - 1;
+            tabs.select((
+                candidate[parseInt((flag && TREESTYLE.getParentTab(gBrowser.mCurrentTab) && ((count && count - 1) || "0")) || (count || tap()))] ||
+                all[carryover(all, candidate, count)]
+            )._tPos);
+        };
+
+        // mappings {{{2
+        [
+            [
+                ['gj', 'sj'], 'Go to the next tab *loaded*.',
+                function (count)
+                    select(SELECTORS.BarTab.loaded("-right"),
+                           SELECTORS.BarTab.loaded(),
+                           count),
+            ], [
+                ['gk', 'sk'], 'Go to the previous tab *loaded*.',
+                function (count)
+                    select(SELECTORS.BarTab.loaded("-left").reverse(),
+                           SELECTORS.BarTab.loaded().reverse(),
+                           count),
+            ], [
+                ['gJ', 'sJ'], 'Go to the next *root* tab *loaded*.',
+                function (count)
+                    select(SELECTORS.Base.right(SELECTORS.BarTab.loaded(TREESTYLE.rootTabs)),
+                           SELECTORS.BarTab.loaded(TREESTYLE.rootTabs),
+                           count, true),
+            ], [
+                ['gK', 'sK'], 'Go to the previous *root* tab *loaded*.',
+                function (count)
+                    select(SELECTORS.Base.left(SELECTORS.BarTab.loaded(TREESTYLE.rootTabs)).reverse(),
+                           SELECTORS.BarTab.loaded(TREESTYLE.rootTabs).reverse(),
+                           count, true),
+            ],
+        ].forEach(function ([keys, description, action, flag])
+              mappings.addUserMap([modes.NORMAL], keys, description, action, {count: true})
+        );
+    };
+})(); // }}}1
+
+// vim: sw=4 ts=4 et si fdm=marker:
