@@ -1,10 +1,10 @@
 /**
  * reload_browser_object.js
- *     BrowserObject���̃I�v�V�����Ŏw�肵���͈͂̃^�u���ēǂݍ��݂���plugin
+ *     BrowserObject風のオプションで指定した範囲のタブを再読み込みするplugin
  *
  * command
  *     reloadB[rowserObject] [-option]
- *         �����Ŏw�肵���͈͂̃^�u���ēǂݍ��݂���
+ *         引数で指定した範囲のタブを再読み込みする
  *
  * requires
  *     [browser_object_api.js](http://github.com/littlefolk/vimperator-plugins/blob/master/browser_object_api.js)
