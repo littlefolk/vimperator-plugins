@@ -35,11 +35,12 @@
                 if (matches)
                     gBrowser.BarTabHandler.loadTab(tabs.getTab(parseInt(matches[1], 10) - 1));
                 else if (args.bang)
-                    browser_object_api.forEach("-all", {}, function (aTab) gBrowser.BarTabHandler.loadTab(aTab));
+                    browser_object_api.get("all").forEach(function (aTab) gBrowser.BarTabHandler.loadTab(aTab));
                 else if (args.string)
-                    browser_object_api.forEach(args.string, {count: args["-number"], filter: args["-filter"]}, function (aTab) gBrowser.BarTabHandler.loadTab(aTab));
+                    browser_object_api.get(args.string, {count: args["--count"], filter: args["--filter"]})
+                                          .forEach(function (aTab) gBrowser.BarTabHandler.loadTab(aTab));
             }, {
-                options: browser_object_api.optionsFull,
+                options: browser_object_api.fullOptions,
                 argCount: "?",
                 bang: true,
                 count: true,
@@ -52,13 +53,13 @@
             true
         );
 
-        browser_object_api.options.forEach(function (scope) {
-            let _ = scope.charAt(1);
+        util.map(browser_object_api.charKeys, function (scope) {
             mappings.addUserMap(
                 [modes.NORMAL],
-                [(liberator.globalVariables.browser_object_prefix || "") + "w" + _ + "t"],
+                [(liberator.globalVariables.browser_object_prefix || "") + "w" + scope + "t"],
                 "wakeup " + scope + " tabs",
-                function (count) browser_object_api.forEach("-" + _, {count: count}, function (aTab) gBrowser.BarTabHandler.loadTab(aTab)),
+                function (count) browser_object_api.get(scope, {count: count})
+                                                       .forEach(function (aTab) gBrowser.BarTabHandler.loadTab(aTab)),
                 {count: true}
             );
         });

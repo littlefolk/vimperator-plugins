@@ -21,7 +21,7 @@
 (function(){ // {{{1
     if (liberator.plugins.browser_object_api) {
         // base {{{2
-        const SELECTORS = liberator.plugins.browser_object_api.Selectors;
+        const SELECTORS = liberator.plugins.browser_object_api;
         const TREESTYLE = TreeStyleTabService;
         let OPTION = {
             // Countがタブの先端・終端を越える数だけ与えられた場合に、反対側に飛んで続けるか、端で止まるか。
@@ -29,7 +29,7 @@
         };
 
         // function {{{2
-        let tap = function () (SELECTORS.BarTab.istap(gBrowser.mCurrentTab)? 0: 1);
+        let tap = function () ((SELECTORS.mCurrentTab.getAttribute("ontap") == "true")? 0: 1);
         let select = function (candidate, all, count, flag) {
             let carryover =
                 (OPTION.loop)?
@@ -49,26 +49,26 @@
             [
                 ['gj', 'sj'], 'Go to the next tab *loaded*.',
                 function (count)
-                    select(SELECTORS.BarTab.loaded("-right"),
-                           SELECTORS.BarTab.loaded(),
+                    select(SELECTORS.get("right", "loaded"),
+                           SELECTORS.get("loaded"),
                            count),
             ], [
                 ['gk', 'sk'], 'Go to the previous tab *loaded*.',
                 function (count)
-                    select(SELECTORS.BarTab.loaded("-left").reverse(),
-                           SELECTORS.BarTab.loaded().reverse(),
+                    select(SELECTORS.get("left", "loaded").reverse(),
+                           SELECTORS.get("loaded").reverse(),
                            count),
             ], [
                 ['gJ', 'sJ'], 'Go to the next *root* tab *loaded*.',
                 function (count)
-                    select(SELECTORS.Base.right(SELECTORS.BarTab.loaded(TREESTYLE.rootTabs)),
-                           SELECTORS.BarTab.loaded(TREESTYLE.rootTabs),
+                    select(SELECTORS.right(SELECTORS.loaded(TREESTYLE.rootTabs)),
+                           SELECTORS.loaded(TREESTYLE.rootTabs),
                            count, true),
             ], [
                 ['gK', 'sK'], 'Go to the previous *root* tab *loaded*.',
                 function (count)
-                    select(SELECTORS.Base.left(SELECTORS.BarTab.loaded(TREESTYLE.rootTabs)).reverse(),
-                           SELECTORS.BarTab.loaded(TREESTYLE.rootTabs).reverse(),
+                    select(SELECTORS.left(SELECTORS.loaded(TREESTYLE.rootTabs)).reverse(),
+                           SELECTORS.loaded(TREESTYLE.rootTabs).reverse(),
                            count, true),
             ],
         ].forEach(function ([keys, description, action, flag])

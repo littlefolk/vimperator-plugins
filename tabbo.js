@@ -25,15 +25,15 @@
 (function(){
     if (liberator.plugins.browser_object_api) {
         let baseCommands = [[["tabb[o]"], ":tabdo with BrowserObject"]];
-        let moreCommands = browser_object_api.options.map(function (scope) [[scope], ":tabbo -" + scope, scope]);
+        let moreCommands = util.map(browser_object_api.keys, function (scope) [[scope], ":tabbo -" + scope, scope]);
 
         (baseCommands.concat(moreCommands)).forEach(function ([cmd, desc, scope]) {
             commands.addUserCommand(
                 cmd, desc,
                 function (args) {
                     if (args.literalArg != "") {
-                        let current = browser_object_api.Selectors.Base.current();
-                        browser_object_api.forEach(scope || args.string, {count: args["-number"], filter: args["-filter"]}, function (aTab) {
+                        let current = browser_object_api.mCurrentTab;
+                        browser_object_api.get(scope || args.string, {count: args["--count"], filter: args["--filter"]}).forEach(function (aTab) {
                             tabs.select(aTab._tPos);
                             liberator.execute(args[0], null, true);
                         });
@@ -48,7 +48,7 @@
                             icon: function (item) item.image || DEFAULT_FAVICON,
                             indicator: function (item) let (i = item._tPos) (i == tabs.index() && "%") || (i == tabs.index(tabs.alternate) && "#") || " ",
                         };
-                        context.completions = browser_object_api.select(scope || args.string, {count: args["-number"], filter: args["-filter"]});
+                        context.completions = browser_object_api.get(scope || args.string, {count: args["--count"], filter: args["--filter"]});
                         let process = context.process[0];
                         context.process = [function (item, text) <>
                             <span highlight="Indicator" style="display: inline-block; width: 2em; text-align: center">{item.indicator}</span>
@@ -66,7 +66,7 @@
                     argCount: "?",
                     completer: function (context) completion.ex(context),
                     literal: 0,
-                    options: browser_object_api[(scope? "optionsPlus": "optionsFull")],
+                    options: scope? browser_object_api.optionSubs: browser_object_api.fullOptions,
                 },
                 true
             );

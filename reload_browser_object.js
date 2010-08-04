@@ -16,12 +16,9 @@
             ["reloadB[rowserObject]"],
             "Reload some tabs with BrowserObject",
             function (args)
-                browser_object_api.forEach(
-                  args.string,
-                  {count: args["-number"], filter: args["-filter"]},
-                  function (aTab) tabs.reload(aTab, args.bang)
-                ),
-            {options: browser_object_api.optionsFull},
+                browser_object_api.get(args.string, {count: args["--count"], filter: args["--filter"]})
+                                      .forEach(function (aTab) tabs.reload(aTab, args.bang)),
+            {options: browser_object_api.fullOptions},
             true
         );
     };
