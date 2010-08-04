@@ -70,6 +70,9 @@ BrowserObjectAPI.prototype = { // {{{1
     get charKeys ()
         keys(this.CHAR_TABLE),
 
+    get charValues ()
+        values(this.CHAR_TABLE),
+
     /**
      * BrowserObjectAPI.add
      *

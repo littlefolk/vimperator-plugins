@@ -25,7 +25,7 @@
 (function(){
     if (liberator.plugins.browser_object_api) {
         let baseCommands = [[["tabb[o]"], ":tabdo with BrowserObject"]];
-        let moreCommands = util.map(browser_object_api.keys, function (scope) [[scope], ":tabbo -" + scope, scope]);
+        let moreCommands = util.map(browser_object_api.charValues, function (scope) [[scope], ":tabbo -" + scope, scope]);
 
         (baseCommands.concat(moreCommands)).forEach(function ([cmd, desc, scope]) {
             commands.addUserCommand(
