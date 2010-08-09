@@ -47,7 +47,7 @@ liberator.plugins.Block = function (flag) { // {{{1
             activeBlockIndex,
 
         activeBlock: function ()
-            this.__proto__[this.activeBlockIndex],
+            this.__proto__[this.activeBlockIndex] || [],
 
         activeBlockTop: function ()
             this.activeBlock()[0],
@@ -56,7 +56,7 @@ liberator.plugins.Block = function (flag) { // {{{1
             this.activeBlock().reverse()[0],
 
         previousBlock: function (i)
-            this.__proto__[this.activeBlockIndex - (i || 1)],
+            this.__proto__[this.activeBlockIndex - (i || 1)] || [],
 
         previousBlockTop: function (i)
             this.previousBlock(i)[0],
@@ -65,13 +65,31 @@ liberator.plugins.Block = function (flag) { // {{{1
             this.previousBlock(i).reverse()[0],
 
         nextBlock: function (i)
-            this.__proto__[this.activeBlockIndex + (i || 1)],
+            this.__proto__[this.activeBlockIndex + (i || 1)] || [],
 
         nextBlockTop: function (i)
             this.nextBlock(i)[0],
 
         nextBlockEnd: function (i)
             this.nextBlock(i).reverse()[0],
+
+        firstBlock: function ()
+            this.__proto__[0] || [],
+
+        firstBlockTop: function ()
+            this.firstBlock()[0],
+
+        firstBlockEnd: function ()
+            this.firstBlock().reverse()[0],
+
+        lastBlock: function ()
+            this.__proto__.reverse()[0] || [],
+
+        lastBlockTop: function ()
+            this.lastBlock()[0],
+
+        lastBlockEnd: function ()
+            this.lastBlock().reverse()[0],
     };
     // }}}
     return libly.$U.extend(util.Array(tabBlocks), method);
@@ -83,37 +101,37 @@ liberator.plugins.Block = function (flag) { // {{{1
         "^", "Switch to the this Block's first tab.",
         function ()
             let (target = plugins.Block().activeBlockTop())
-                target && tabs.select(target._tPos),
+                target && tabs.select(target._tPos.toString()),
     ],
     [
         "$", "Switch to the this Block's last tab.",
         function ()
             let (target = plugins.Block().activeBlockEnd())
-                target && tabs.select(target._tPos)
+                target && tabs.select(target._tPos.toString()),
     ],
     [
         "p", "Switch to the Previous Block's first tab.",
         function (count)
-            let (target = plugins.Block().previousBlockEnd(count))
-                target && tabs.select(target._tPos),
+            let (target = plugins.Block().previousBlockEnd(count), sub = plugins.Block().lastBlockEnd())
+                tabs.select((target && target._tPos.toString()) || (sub && sub._tPos.toString())),
     ],
     [
         "n", "Switch to the Next Block's first tab.",
         function (count)
-            let (target = plugins.Block().nextBlockTop(count))
-                target && tabs.select(target._tPos),
+            let (target = plugins.Block().nextBlockTop(count), sub = plugins.Block().firstBlockTop())
+                tabs.select((target && target._tPos.toString()) || (sub && sub._tPos.toString())),
     ],
     [
         "P", "Switch to the Previous NotTapBlock's first tab.",
         function (count)
             let (target = plugins.Block(true).previousBlockEnd(count))
-                target && tabs.select(target._tPos),
+                target && tabs.select(target._tPos.toString()),
     ],
     [
         "N", "Switch to the Next NotTapBlock's first tab.",
         function (count)
             let (target = plugins.Block(true).nextBlockTop(count))
-                target && tabs.select(target._tPos),
+                target && tabs.select(target._tPos.toString()),
     ],
 ].map(function ([cmd, desc, func]) mappings.addUserMap([modes.NORMAL], ["gb" + cmd], desc, func, {count: true}));
 
