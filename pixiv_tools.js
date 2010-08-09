@@ -156,7 +156,7 @@ liberator.plugins.pixiv_tools = (function(){
                       *            元画像が画面左にはみ出したら左端から始める
                       *   y(上辺): 縮小画像の上辺
                       */
-                    let buffer = 2;
+                    let buffer = 3;
                     let x = (middleImage.offsetLeft + middleImage.width / 2) - (this.naturalWidth / 2);
                     x = let (drop = (x + this.naturalWidth + buffer) - bodyDoc.clientWidth) (drop > 0)? x - drop - buffer: x;
                     x = (x <= 0)? 0: x - buffer;
@@ -535,8 +535,6 @@ liberator.plugins.pixiv_tools = (function(){
                 ['I' , ':PixivCdUserList'      ],
                 ['c' , ':PixivToggleComment'   ],
                 ['x' , ':PixivPostTombloo'     ],
-                ['gb', ':PixivCdIllustBookmark'],
-                ['gB', ':PixivCdUserBookmark'  ],
                 ['gu', ':PixivCdUserFront'     ],
                 ['[[', ':PixivCdIllustPrev'    ],
                 [']]', ':PixivCdIllustNext'    ],
