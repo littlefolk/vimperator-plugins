@@ -5,6 +5,7 @@
  * @property {Object} TABLE
  * @property {Object} CHAR_TABLE
  * @property {Number} VERSION
+ * @requires _libly.js
  *
  * @example
  * let browserObjectAPI = new BrowserObjectAPI;

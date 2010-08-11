@@ -19,6 +19,7 @@
  * requires
  *     [BarTab](https://addons.mozilla.org/ja/firefox/addon/67651/)
  *     [Tree Style Tab](http://piro.sakura.ne.jp/xul/_treestyletab.html)
+ *     [_libly.js](http://coderepos.org/share/browser/lang/javascript/vimperator-plugins/trunk/_libly.js)
  *     [browser_object_api.js](http://github.com/littlefolk/vimperator-plugins/blob/master/browser_object_api.js)
  */
 liberator.plugins.Block = function (flag) { // {{{1

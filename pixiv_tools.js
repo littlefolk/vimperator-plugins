@@ -14,6 +14,7 @@
  *     Register.mappings
  *
  * requires
+ *     [_libly.js](http://coderepos.org/share/browser/lang/javascript/vimperator-plugins/trunk/_libly.js)
  *     [Tombloo](http://wiki.github.com/to/tombloo/)
  *
  * via
