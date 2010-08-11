@@ -33,10 +33,11 @@
             let mTabIsParent = function (aTab) !(TreeStyleTabService.getParentTab(aTab));
             let tabBlocks = [], cacheHost, cacheTap, cacheIndex;
             mTabs.forEach(function (aTab) {
-                let [tabHost, tabTap] = [mTabHost(aTab), mTabIsTap(aTab)];
-                if ((cacheHost != tabHost || cacheTap != tabTap) && mTabIsParent(aTab)) {
-                    tabBlocks.push([]);
-                    [cacheHost, cacheTap] = [tabHost, tabTap];
+                let (tabHost = mTabHost(aTab), tabTap = mTabIsTap(aTab)) {
+                    if ((cacheHost != tabHost || cacheTap != tabTap) && mTabIsParent(aTab)) {
+                        [cacheHost, cacheTap] = [tabHost, tabTap];
+                        tabBlocks.push([]);
+                    };
                 };
                 let (index = tabBlocks.length - 1) {
                     tabBlocks[index].push(aTab);
@@ -92,8 +93,7 @@
 
                 lastBlockEnd: function ()
                     this.lastBlock().reverse()[0],
-            };
-            // }}}
+            }; // }}}2
             return libly.$U.extend(util.Array(tabBlocks), method);
         };
 
@@ -104,42 +104,37 @@
                 function ()
                     let (block = plugins.Block())
                         let (target = block.activeBlockTop())
-                            tabs.select(target && target._tPos.toString()),
-            ],
-            [
+                            tabs.select(target && target._tPos),
+            ], [
                 "$", "Switch to the this Block's last tab.",
                 function ()
                     let (block = plugins.Block())
                         let (target = block.activeBlockEnd())
-                            tabs.select(target && target._tPos.toString()),
-            ],
-            [
+                            tabs.select(target && target._tPos),
+            ], [
                 "p", "Switch to the Previous Block's first tab.",
                 function (count)
                     let (block = plugins.Block())
                         let (target = block.previousBlockEnd(count), sub = block.lastBlockEnd())
-                            tabs.select((target && target._tPos.toString()) || (sub && sub._tPos.toString())),
-            ],
-            [
+                            tabs.select((target && target._tPos.toString()) || (sub && sub._tPos)),
+            ], [
                 "n", "Switch to the Next Block's first tab.",
                 function (count)
                     let (block = plugins.Block())
                         let (target = block.nextBlockTop(count), sub = block.firstBlockTop())
-                            tabs.select((target && target._tPos.toString()) || (sub && sub._tPos.toString())),
-            ],
-            [
+                            tabs.select((target && target._tPos.toString()) || (sub && sub._tPos)),
+            ], [
                 "P", "Switch to the Previous NotTapBlock's first tab.",
                 function (count)
                     let (block = plugins.Block(true))
                         let (target = block.previousBlockEnd(count), sub = block.lastBlockEnd())
-                            tabs.select((target && target._tPos.toString()) || (sub && sub._tPos.toString())),
-            ],
-            [
+                            tabs.select((target && target._tPos.toString()) || (sub && sub._tPos)),
+            ], [
                 "N", "Switch to the Next NotTapBlock's first tab.",
                 function (count)
                     let (block = plugins.Block(true))
                         let (target = block.nextBlockTop(count), sub = block.firstBlockTop())
-                            tabs.select((target && target._tPos.toString()) || (sub && sub._tPos.toString())),
+                            tabs.select((target && target._tPos.toString()) || (sub && sub._tPos)),
             ],
         ].map(function ([cmd, desc, func]) mappings.addUserMap([modes.NORMAL], ["gb" + cmd], desc, func, {count: true}));
 
