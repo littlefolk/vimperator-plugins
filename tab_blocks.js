@@ -30,25 +30,23 @@
             let mCurrentIndex = browser_object_api.mCurrentIndex;
             let mTabHost = function (aTab) {try{return aTab.linkedBrowser.contentDocument.location.host}catch(e){}};
             let mTabIsTap = function (aTab) !!(aTab.getAttribute("ontap") == "true");
-            let mTabIsParent = function (aTab) !TreeStyleTabService.getParentTab(aTab);
-            let tabBlocks = [], cacheHost, cacheTap, activeBlockIndex;
+            let mTabIsParent = function (aTab) !(TreeStyleTabService.getParentTab(aTab));
+            let tabBlocks = [], cacheHost, cacheTap, cacheIndex;
             mTabs.forEach(function (aTab) {
-                let tabHost = mTabHost(aTab);
-                let tabTap = mTabIsTap(aTab);
+                let [tabHost, tabTap] = [mTabHost(aTab), mTabIsTap(aTab)];
                 if ((cacheHost != tabHost || cacheTap != tabTap) && mTabIsParent(aTab)) {
                     tabBlocks.push([]);
-                    cacheHost = tabHost;
-                    cacheTap = tabTap;
+                    [cacheHost, cacheTap] = [tabHost, tabTap];
                 };
                 let (index = tabBlocks.length - 1) {
                     tabBlocks[index].push(aTab);
-                    if (!activeBlockIndex && aTab._tPos == mCurrentIndex)
-                        activeBlockIndex = index;
+                    if (aTab._tPos == mCurrentIndex)
+                        cacheIndex = index;
                 };
             });
             let method = { // {{{2
                 get activeBlockIndex ()
-                    activeBlockIndex,
+                    cacheIndex,
 
                 activeBlock: function ()
                     this.__proto__[this.activeBlockIndex] || [],
@@ -104,38 +102,44 @@
             [
                 "^", "Switch to the this Block's first tab.",
                 function ()
-                    let (target = plugins.Block().activeBlockTop())
-                        target && tabs.select(target._tPos.toString()),
+                    let (block = plugins.Block())
+                        let (target = block.activeBlockTop())
+                            tabs.select(target && target._tPos.toString()),
             ],
             [
                 "$", "Switch to the this Block's last tab.",
                 function ()
-                    let (target = plugins.Block().activeBlockEnd())
-                        target && tabs.select(target._tPos.toString()),
+                    let (block = plugins.Block())
+                        let (target = block.activeBlockEnd())
+                            tabs.select(target && target._tPos.toString()),
             ],
             [
                 "p", "Switch to the Previous Block's first tab.",
                 function (count)
-                    let (target = plugins.Block().previousBlockEnd(count), sub = plugins.Block().lastBlockEnd())
-                        tabs.select((target && target._tPos.toString()) || (sub && sub._tPos.toString())),
+                    let (block = plugins.Block())
+                        let (target = block.previousBlockEnd(count), sub = block.lastBlockEnd())
+                            tabs.select((target && target._tPos.toString()) || (sub && sub._tPos.toString())),
             ],
             [
                 "n", "Switch to the Next Block's first tab.",
                 function (count)
-                    let (target = plugins.Block().nextBlockTop(count), sub = plugins.Block().firstBlockTop())
-                        tabs.select((target && target._tPos.toString()) || (sub && sub._tPos.toString())),
+                    let (block = plugins.Block())
+                        let (target = block.nextBlockTop(count), sub = block.firstBlockTop())
+                            tabs.select((target && target._tPos.toString()) || (sub && sub._tPos.toString())),
             ],
             [
                 "P", "Switch to the Previous NotTapBlock's first tab.",
                 function (count)
-                    let (target = plugins.Block(true).previousBlockEnd(count))
-                        target && tabs.select(target._tPos.toString()),
+                    let (block = plugins.Block(true))
+                        let (target = block.previousBlockEnd(count), sub = block.lastBlockEnd())
+                            tabs.select((target && target._tPos.toString()) || (sub && sub._tPos.toString())),
             ],
             [
                 "N", "Switch to the Next NotTapBlock's first tab.",
                 function (count)
-                    let (target = plugins.Block(true).nextBlockTop(count))
-                        target && tabs.select(target._tPos.toString()),
+                    let (block = plugins.Block(true))
+                        let (target = block.nextBlockTop(count), sub = block.firstBlockTop())
+                            tabs.select((target && target._tPos.toString()) || (sub && sub._tPos.toString())),
             ],
         ].map(function ([cmd, desc, func]) mappings.addUserMap([modes.NORMAL], ["gb" + cmd], desc, func, {count: true}));
 
