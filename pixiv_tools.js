@@ -369,7 +369,8 @@ liberator.plugins.pixiv_tools = (function(){
                 this.inIllust && !$LX("//span[@class='ahref_type05']"),
 
             get isFavUser ()
-                this.inPixiv && !$LX("id('favorite_btn')[@class='add_favorite']"),
+                this.inPixiv && !!$LX("id('favorite-button')[@class='added']"),
+
         },
 
         DOM: { // {{{3
