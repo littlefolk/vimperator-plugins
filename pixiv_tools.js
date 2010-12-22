@@ -397,13 +397,22 @@ liberator.plugins.pixiv_tools = (function(){
         },
 
         ID: { // {{{3
+            get pixiv_js ()
+                window.content.wrappedJSObject.pixiv,
+
             get illust ()
-                let (ret = let (e = $("rpc_i_id") || $LX("//input[@name='illust_id']")) e && (e.textContent || e.value))
-                    liberator.assert(ret, "Failure, ID.illust. Missing illust id.") || ret,
+                let (ret = this.pixiv_js?
+                        this.pixiv_js.context.illustId:
+                        let (e = $("rpc_i_id") || $LX("//input[@name='illust_id']")) e && (e.textContent || e.value)
+                    )
+                liberator.assert(ret, "Failure, ID.illust. Missing illust id.") || ret,
 
             get user ()
-                let (ret = let (e = $("rpc_u_id") || $LX("//input[@name='user_id']")) e && (e.textContent || e.value))
-                    liberator.assert(ret, "Failure, ID.user. Missing user id.") || ret,
+                let (ret = this.pixiv_js?
+                        this.pixiv_js.contextUser.id:
+                        let (e = $("rpc_u_id") || $LX("//input[@name='user_id']")) e && (e.textContent || e.value)
+                    )
+                liberator.assert(ret, "Failure, ID.user. Missing illust id.") || ret,
 
             get vicinity () {
                 let ret =
