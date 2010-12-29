@@ -85,7 +85,10 @@ liberator.plugins.pixiv_tools = (function(){
                         context.title.push(self.dataBookmarkTime.toISOString());
                         let (skip = context.filter.match(/^.*\s+/))
                             skip && context.advance(skip[0].length);
-                    }
+                    },
+                    default:
+                        let (ret = self._getCompleteTags(self.ID.illust, self.getImageTags, ["both"]).map(function (a) a[0]).join(" "))
+                            (ret && ret + " ") || "",
                 }
             );
         },
@@ -222,8 +225,8 @@ liberator.plugins.pixiv_tools = (function(){
          * @param {Array} _imgTags 画像に付けられているタグのリスト
          * @returns {Array} 補完候補のタグリスト
          */
-        _getCompleteTags: function (_imgID, _imgTags) { // {{{3
-            let key = _imgID || "_";
+        _getCompleteTags: function (_imgID, _imgTags, reqkey) { // {{{3
+            let key = _imgID + (reqkey ? reqkey.join("") : "_");
             let bookmarkTags = this.dataBookmarkTags;
             if (bookmarkTags && !this.dataCompleteTags[key]) {
                 let _dict = {};
@@ -236,7 +239,7 @@ liberator.plugins.pixiv_tools = (function(){
                     _dict["illust"] = _dict["illust-full"].filter(function ([t, d]) !both[t]);
                     _dict["bookmark"] = _dict["bookmark-full"].filter(function ([t, d]) !both[t]);
                 };
-                this.dataCompleteTags[key] = this._sortCompleteTags(this.Setting.completion.tag || ["illust-full", "bookmark-full"], _dict);
+                this.dataCompleteTags[key] = this._sortCompleteTags(reqkey || this.Setting.completion.tag || ["illust-full", "bookmark-full"], _dict);
             };
             return this.dataCompleteTags[key];
         },
