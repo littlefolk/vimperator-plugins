@@ -82,15 +82,16 @@
             literal: 1,
         };
 
-        commands.add([ch ? ch + "m[ap]" : "map"],
+        commands.addUserCommand([ch ? ch + "m[ap]" : "map"],
             "Map a key sequence" + modeDescription,
             function (args) { map(args, modes, false); },
-            opts);
+            opts, true);
 
-        commands.add([ch + "no[remap]"],
+        commands.addUserCommand([ch + "no[remap]"],
             "Map a key sequence without remapping keys" + modeDescription,
             function (args) { map(args, modes, true); },
-            opts);
+            opts, true);
+
     }
 
     // addMapCommands("",  [modes.NORMAL, modes.VISUAL], "");
