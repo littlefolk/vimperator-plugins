@@ -31,13 +31,21 @@
                 mappings.addUserMap(modes, [lhs],
                     "User defined mapping",
                     // function (count) { events.feedkeys((count || "") + this.rhs, this.noremap, this.silent); },
-                    (/^[:|;].+<CR>$/i.test(rhs))?
-                        function (count) liberator.execute(this.rhs):
-                        function (count) events.feedkeys((count || "") + this.rhs, this.noremap),
-                    {
+                    function (count) {
+                        let hunks = this.rhs.replace(/((<CR>)|\w+(?=:|;))/i, "$&\t").split(/\t/), noremap = this.noremap;
+                        return function () {
+                            hunks.filter(function (item) item != "")
+                                .map(function (hunk)
+                                    (/^[:|;].+<CR>$/i.test(hunk))?
+                                        function (count) liberator.execute(hunk.replace(/<Space>/ig, " ").replace(/<.+?>/g, "")):
+                                        function (count) events.feedkeys((count || "") + hunk, noremap)
+                                )
+                                .map(function (f) f.call());
+                        }();
+                    }, {
                         count: true,
                         // rhs: events.canonicalKeys(rhs),
-                        rhs: rhs.replace(/<Space>/ig, " ").replace(/<.+?>/g, ""),
+                        rhs: rhs,
                         noremap: !!noremap,
                         // silent: "<silent>" in args,
                         matchingUrls: urls
